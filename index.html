@@ -9,12 +9,10 @@
 /* ================= БАЗОВЫЕ СТИЛИ ================= */
 :root{
   --bg:#040814; --bg2:#081022;
-  --panel:rgba(10,16,36,.72);
   --stroke:rgba(162,212,255,.12);
   --text:#eef7ff; --muted:#92a6c8; --cyan:#77ebff;
   --shadow:0 18px 48px rgba(0,0,0,.34);
   --safe-top:env(safe-area-inset-top, 0px);
-  --safe-bottom:env(safe-area-inset-bottom, 0px);
 }
 
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -23,7 +21,7 @@ body{
   font-family:'Exo 2',sans-serif; min-height:100vh;
   color:var(--text); overflow-x:hidden;
   background:radial-gradient(circle at 50% 50%,#060b18 0%,#02050c 100%);
-  touch-action: pan-y; /* Позволяет скроллить меню, но не зумить */
+  touch-action: pan-y;
 }
 body.solar-lock{overflow:hidden; touch-action: none;}
 
@@ -64,8 +62,8 @@ body.solar-lock{overflow:hidden; touch-action: none;}
 .icon-btn{ width:44px; height:44px; border-radius:14px; border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.05); color:#fff; cursor:pointer; font-size:1.2rem; }
 
 .planets-container{ display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; }
-.planet-card{ padding:20px; border-radius:24px; text-align:center; cursor:pointer; transition:.3s; }
-.planet-card:hover{ transform:translateY(-5px); border-color:var(--cyan); }
+.planet-card{ padding:20px; border-radius:24px; text-align:center; transition:.3s; }
+.planet-photo { width: 100%; height: 160px; object-fit: cover; border-radius: 16px; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.08); background: #000; }
 .planet-name{ font-family:'Orbitron',sans-serif; font-size:1.3rem; margin-bottom:4px; color:var(--cyan); }
 .planet-tagline{ color:var(--muted); font-size:.9rem; margin-bottom:16px; }
 
@@ -147,7 +145,7 @@ body.solar-lock{overflow:hidden; touch-action: none;}
       <div class="nav-card glass" onclick="showSection('planets')">
         <div class="nav-icon">🪐</div>
         <div class="nav-title">Карточки Планет</div>
-        <div class="nav-desc">Быстрый доступ к текстовой информации и основным параметрам в 2D режиме.</div>
+        <div class="nav-desc">Быстрый доступ к фотографиям и основным параметрам в 2D режиме.</div>
       </div>
       <div class="nav-card glass" onclick="showSection('solar')">
         <div class="nav-icon">☀️</div>
@@ -206,16 +204,16 @@ body.solar-lock{overflow:hidden; touch-action: none;}
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-// ---- БАЗА ДАННЫХ ПЛАНЕТ ----
+// ---- БАЗА ДАННЫХ ПЛАНЕТ С РЕАЛЬНЫМИ ФОТОГРАФИЯМИ NASA ----
 const PLANETS = [
-  { id:'mercury', name:'Меркурий', r:2.5, dist:50, period:8, rotation:0.01, tagline:'Самая маленькая планета', stats:{'Диаметр':'4 879 км', 'Температура':'-173 / +427°C'}, facts:['Ближайшая к Солнцу планета.','Поверхность покрыта кратерами, как у Луны.'] },
-  { id:'venus', name:'Венера', r:4.5, dist:75, period:12, rotation:0.005, tagline:'Самая горячая планета', stats:{'Диаметр':'12 104 км', 'Температура':'+464°C'}, facts:['Плотная атмосфера и парниковый эффект.','Вращается в обратную сторону.'] },
-  { id:'earth', name:'Земля', r:5.0, dist:110, period:16, rotation:0.02, tagline:'Голубая планета', stats:{'Диаметр':'12 742 км', 'Спутники':'1'}, facts:['Единственная планета, где подтверждена жизнь.','71% поверхности покрыто океанами.'] },
-  { id:'mars', name:'Марс', r:3.2, dist:145, period:20, rotation:0.018, tagline:'Красная планета', stats:{'Диаметр':'6 779 км', 'Спутники':'2'}, facts:['Красный цвет обусловлен оксидом железа.','Имеет крупнейший вулкан в Солнечной системе - Олимп.'] },
-  { id:'jupiter', name:'Юпитер', r:14.0, dist:210, period:30, rotation:0.04, tagline:'Газовый гигант', stats:{'Диаметр':'139 820 км', 'Масса':'1.9×10²⁷ кг'}, facts:['Самая большая планета системы.','Большое красное пятно — это гигантский шторм.'] },
-  { id:'saturn', name:'Сатурн', r:11.0, dist:280, period:40, rotation:0.035, rings:true, ringsInner:1.2, ringsOuter:2.4, tagline:'Властелин колец', stats:{'Диаметр':'116 460 км', 'Спутники':'146'}, facts:['Известен своими яркими и широкими кольцами.','Его средняя плотность меньше плотности воды.'] },
-  { id:'uranus', name:'Уран', r:7.0, dist:350, period:50, rotation:0.025, rings:true, ringsInner:1.4, ringsOuter:2.0, tagline:'Ледяной гигант', stats:{'Температура':'-195°C', 'Спутники':'27'}, facts:['Вращается, практически "лежа на боку".','Относится к категории ледяных гигантов.'] },
-  { id:'neptune', name:'Нептун', r:6.8, dist:420, period:60, rotation:0.024, tagline:'Ветреный гигант', stats:{'Температура':'-200°C', 'Спутники':'16'}, facts:['Обладает самыми сильными ветрами в системе.','Был открыт математически, а не через наблюдения.'] }
+  { id:'mercury', name:'Меркурий', r:2.5, dist:50, period:8, rotation:0.01, tagline:'Самая маленькая планета', stats:{'Диаметр':'4 879 км', 'Температура':'-173 / +427°C'}, facts:['Ближайшая к Солнцу планета.','Поверхность покрыта кратерами, как у Луны.'], image:'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Mercury_in_true_color.jpg/800px-Mercury_in_true_color.jpg' },
+  { id:'venus', name:'Венера', r:4.5, dist:75, period:12, rotation:0.005, tagline:'Самая горячая планета', stats:{'Диаметр':'12 104 км', 'Температура':'+464°C'}, facts:['Плотная атмосфера и парниковый эффект.','Вращается в обратную сторону.'], image:'https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Venus_from_Mariner_10.jpg/800px-Venus_from_Mariner_10.jpg' },
+  { id:'earth', name:'Земля', r:5.0, dist:110, period:16, rotation:0.02, tagline:'Голубая планета', stats:{'Диаметр':'12 742 км', 'Спутники':'1'}, facts:['Единственная планета, где подтверждена жизнь.','71% поверхности покрыто океанами.'], image:'https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/The_Earth_seen_from_Apollo_17.jpg/800px-The_Earth_seen_from_Apollo_17.jpg' },
+  { id:'mars', name:'Марс', r:3.2, dist:145, period:20, rotation:0.018, tagline:'Красная планета', stats:{'Диаметр':'6 779 км', 'Спутники':'2'}, facts:['Красный цвет обусловлен оксидом железа.','Имеет крупнейший вулкан в Солнечной системе - Олимп.'], image:'https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/OSIRIS_Mars_true_color.jpg/800px-OSIRIS_Mars_true_color.jpg' },
+  { id:'jupiter', name:'Юпитер', r:14.0, dist:210, period:30, rotation:0.04, tagline:'Газовый гигант', stats:{'Диаметр':'139 820 км', 'Масса':'1.9×10²⁷ кг'}, facts:['Самая большая планета системы.','Большое красное пятно — это гигантский шторм.'], image:'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Jupiter.jpg/800px-Jupiter.jpg' },
+  { id:'saturn', name:'Сатурн', r:11.0, dist:280, period:40, rotation:0.035, rings:true, ringsInner:1.3, ringsOuter:2.4, tagline:'Властелин колец', stats:{'Диаметр':'116 460 км', 'Спутники':'146'}, facts:['Известен своими яркими и широкими кольцами.','Его средняя плотность меньше плотности воды.'], image:'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Saturn_during_Equinox.jpg/800px-Saturn_during_Equinox.jpg' },
+  { id:'uranus', name:'Уран', r:7.0, dist:350, period:50, rotation:0.025, rings:true, ringsInner:1.4, ringsOuter:2.0, tagline:'Ледяной гигант', stats:{'Температура':'-195°C', 'Спутники':'27'}, facts:['Вращается, практически "лежа на боку".','Относится к категории ледяных гигантов.'], image:'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Uranus2.jpg/800px-Uranus2.jpg' },
+  { id:'neptune', name:'Нептун', r:6.8, dist:420, period:60, rotation:0.024, tagline:'Ветреный гигант', stats:{'Температура':'-200°C', 'Спутники':'16'}, facts:['Обладает самыми сильными ветрами в системе.','Был открыт математически, а не через наблюдения.'], image:'https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Neptune_-_Voyager_2_%2829347980845%29_flatten_crop.jpg/800px-Neptune_-_Voyager_2_%2829347980845%29_flatten_crop.jpg' }
 ];
 
 // ---- UI НАВИГАЦИЯ ----
@@ -241,15 +239,17 @@ window.goBack = () => {
   if (focusedMesh) unfocusPlanet();
 };
 
+// Генерация 2D Карточек
 const grid = document.getElementById('planetsGrid');
 PLANETS.forEach(p => {
   const card = document.createElement('div'); card.className = 'planet-card glass';
   const stats = Object.entries(p.stats).map(([k,v])=>`<div style="font-size:0.85rem; margin-top:6px; color:#d5e9ff">${k}: <b>${v}</b></div>`).join('');
-  card.innerHTML = `<div class="planet-name">${p.name}</div><div class="planet-tagline">${p.tagline}</div>${stats}`;
+  // Добавлено фото планеты
+  card.innerHTML = `<img src="${p.image}" class="planet-photo" alt="${p.name}"><div class="planet-name">${p.name}</div><div class="planet-tagline">${p.tagline}</div>${stats}`;
   grid.appendChild(card);
 });
 
-// ================= THREE.JS ДВИЖОК И ЗАГРУЗКА ТЕКСТУР =================
+// ================= THREE.JS ДВИЖОК =================
 let isThreeInit = false;
 let scene, camera, renderer, controls;
 let sunLight, ambientLight, inspectionLight;
@@ -257,7 +257,6 @@ let isInspectionMode = true;
 let isAnimPaused = false;
 
 let planetMeshes = [];
-let ringMeshes = [];
 let focusedMesh = null;
 let pointerDownPos;
 
@@ -268,16 +267,21 @@ function initThreeJS() {
   scene = new THREE.Scene();
   
   camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 1, 4000);
-  camera.position.set(0, 250, 450);
+  camera.position.set(0, 300, 600);
 
   renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.useLegacyLights = false; 
+  
+  // КИНЕМАТОГРАФИЧНЫЙ СВЕТ: Мягко гасит пересветы, делает картинку объемной и реалистичной
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0; 
 
   controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true; controls.dampingFactor = 0.05;
-  controls.maxDistance = 1500; controls.minDistance = 15;
+  controls.enableDamping = true; 
+  controls.dampingFactor = 0.05;
+  controls.maxDistance = 1500; 
+  controls.minDistance = 15;
 
   // ==== СВЕТ ====
   sunLight = new THREE.PointLight(0xffffff, 0, 0, 2); 
@@ -290,89 +294,77 @@ function initThreeJS() {
   camera.add(inspectionLight);
   scene.add(camera);
 
-  // ==== ЗАГРУЗКА ТЕКСТУР ====
+  // ==== ЗАГРУЗКА УЛУЧШЕННЫХ ТЕКСТУР И АЛЬФА КАНАЛОВ ====
   const texLoader = new THREE.TextureLoader();
   texLoader.setCrossOrigin('anonymous');
   
-  const repoBase = 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/';
-  const earthBase = 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/';
-
+  // Качественные текстуры планет
+  const tBase = 'https://raw.githubusercontent.com/joshuaenoch/Solar-System/master/textures/';
+  
   const textures = {
-      sun: texLoader.load(repoBase + 'sunmap.jpg'),
-      mercury: texLoader.load(repoBase + 'mercurymap.jpg'),
-      venus: texLoader.load(repoBase + 'venusmap.jpg'),
-      earth: texLoader.load(earthBase + 'earth_atmos_2048.jpg'),
-      earthNormal: texLoader.load(earthBase + 'earth_normal_2048.jpg'),
-      earthSpec: texLoader.load(earthBase + 'earth_specular_2048.jpg'),
-      mars: texLoader.load(repoBase + 'marsmap1k.jpg'),
-      jupiter: texLoader.load(repoBase + 'jupitermap.jpg'),
-      saturn: texLoader.load(repoBase + 'saturnmap.jpg'),
-      saturnRing: texLoader.load(repoBase + 'saturnringcolor.jpg'),
-      uranus: texLoader.load(repoBase + 'uranusmap.jpg'),
-      uranusRing: texLoader.load(repoBase + 'uranusringcolour.jpg'),
-      neptune: texLoader.load(repoBase + 'neptunemap.jpg')
+      sun: texLoader.load(tBase + 'sun.jpg'),
+      mercury: texLoader.load(tBase + 'mercury.jpg'),
+      venus: texLoader.load(tBase + 'venus.jpg'),
+      earth: texLoader.load(tBase + 'earth.jpg'),
+      mars: texLoader.load(tBase + 'mars.jpg'),
+      jupiter: texLoader.load(tBase + 'jupiter.jpg'),
+      saturn: texLoader.load(tBase + 'saturn.jpg'),
+      // PNG с прозрачностью (альфа-каналом) для красивых колец
+      saturnRing: texLoader.load('https://raw.githubusercontent.com/joshuaenoch/Solar-System/master/textures/saturn_ring.png'),
+      uranus: texLoader.load(tBase + 'uranus.jpg'),
+      uranusRing: texLoader.load('https://raw.githubusercontent.com/joshuaenoch/Solar-System/master/textures/uranus_ring.png'),
+      neptune: texLoader.load(tBase + 'neptune.jpg')
   };
 
-  // ==== ИДЕАЛЬНОЕ СОЛНЦЕ (Без зеленых артефактов) ====
+  // ==== ИДЕАЛЬНОЕ СОЛНЦЕ ====
   const sunGroup = new THREE.Group();
   scene.add(sunGroup);
 
-  // Основная сфера Солнца с 3D текстурой
   const sunGeo = new THREE.SphereGeometry(22, 64, 64);
   const sunMat = new THREE.MeshBasicMaterial({ map: textures.sun }); 
   const sun = new THREE.Mesh(sunGeo, sunMat);
   sunGroup.add(sun);
 
-  // Мягкое гало без использования Canvas 2D
-  const glowGeo = new THREE.SphereGeometry(25, 32, 32);
+  const glowGeo = new THREE.SphereGeometry(26, 32, 32);
   const glowMat = new THREE.MeshBasicMaterial({
-      color: 0xffaa33, 
+      color: 0xff8800, 
       transparent: true, 
       opacity: 0.15, 
       blending: THREE.AdditiveBlending,
       side: THREE.BackSide
   });
-  const glow = new THREE.Mesh(glowGeo, glowMat);
-  sunGroup.add(glow);
+  sunGroup.add(new THREE.Mesh(glowGeo, glowMat));
 
   // ==== ПЛАНЕТЫ ====
   PLANETS.forEach((p) => {
     const orbitGroup = new THREE.Group();
+    // Рандомизация начальной позиции на орбите, чтобы не выстраивались в линию
+    orbitGroup.rotation.y = Math.random() * Math.PI * 2; 
     scene.add(orbitGroup);
 
     const geo = new THREE.SphereGeometry(p.r, 64, 64);
-    let mat;
-
-    if (p.id === 'earth') {
-      mat = new THREE.MeshStandardMaterial({
-        map: textures.earth, normalMap: textures.earthNormal, roughnessMap: textures.earthSpec,
-        roughness: 0.8, metalness: 0.1
-      });
-    } else {
-      mat = new THREE.MeshStandardMaterial({ 
+    const mat = new THREE.MeshStandardMaterial({ 
         map: textures[p.id], 
-        roughness: 0.8, metalness: 0.05
-      });
-    }
+        roughness: 0.6, 
+        metalness: 0.1
+    });
 
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.x = p.dist;
-    mesh.userData = { data: p, angle: Math.random() * Math.PI * 2, orbitGroup };
+    mesh.userData = { data: p, angle: Math.random() * Math.PI * 2, orbitGroup, lastPos: null };
     orbitGroup.add(mesh);
     planetMeshes.push(mesh);
 
-    // Цветные кольца (С правильным UV маппингом)
+    // Цветные кольца (С прозрачностью)
     if (p.rings) {
       const innerR = p.r * p.ringsInner;
       const outerR = p.r * p.ringsOuter;
       const ringGeo = new THREE.RingGeometry(innerR, outerR, 64);
       
-      // Фикс UV для корректного отображения 1D текстуры кольца на круге
       const pos = ringGeo.attributes.position;
       const v3 = new THREE.Vector3();
       for (let i = 0; i < pos.count; i++) {
           v3.fromBufferAttribute(pos, i);
-          // Нормализуем радиус от 0 до 1 для UV
           ringGeo.attributes.uv.setXY(i, (v3.length() - innerR) / (outerR - innerR), 0.5); 
       }
 
@@ -380,19 +372,18 @@ function initThreeJS() {
           map: p.id === 'saturn' ? textures.saturnRing : textures.uranusRing,
           side: THREE.DoubleSide, 
           transparent: true, 
-          opacity: p.id === 'uranus' ? 0.4 : 0.8 // Кольца Урана более прозрачные
+          opacity: 1 // прозрачность берется из самого PNG файла
       });
       
       const ring = new THREE.Mesh(ringGeo, ringMat);
-      ring.rotation.x = Math.PI/2 + (p.id === 'saturn' ? 0.3 : 1.6); // Наклон
+      ring.rotation.x = Math.PI/2 + (p.id === 'saturn' ? 0.3 : 1.6); 
       mesh.add(ring);
-      ringMeshes.push(ring);
     }
 
     // Линии орбит
     const pts = [];
-    for(let i=0; i<=64; i++) { const a=(i/64)*Math.PI*2; pts.push(Math.cos(a)*p.dist, 0, Math.sin(a)*p.dist); }
-    scene.add(new THREE.Line(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(pts, 3)), new THREE.LineBasicMaterial({color:0xffffff, transparent:true, opacity:0.12})));
+    for(let i=0; i<=128; i++) { const a=(i/128)*Math.PI*2; pts.push(Math.cos(a)*p.dist, 0, Math.sin(a)*p.dist); }
+    scene.add(new THREE.Line(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(pts, 3)), new THREE.LineBasicMaterial({color:0xffffff, transparent:true, opacity:0.15})));
   });
 
   // Звезды
@@ -402,27 +393,25 @@ function initThreeJS() {
   starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(starsPts, 3));
   scene.add(new THREE.Points(starsGeo, new THREE.PointsMaterial({color:0xffffff, size:1.3, transparent:true, opacity:0.7})));
 
-  // ==== Screen-Space КЛИКИ (Идеально для мобилок) ====
+  // ==== Screen-Space КЛИКИ ====
   canvas.addEventListener('pointerdown', e => { pointerDownPos = {x: e.clientX, y: e.clientY}; });
   
   canvas.addEventListener('pointerup', e => {
     if (Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y) > 5) return;
     
     let closestPlanet = null;
-    let minDistance = 50; // Радиус захвата клика в пикселях (прощает промахи на мобилке)
+    let minDistance = 50; 
 
     planetMeshes.forEach(mesh => {
         const vector = new THREE.Vector3();
         mesh.getWorldPosition(vector);
-        vector.project(camera); // Проецируем 3D координаты в 2D пространство экрана
+        vector.project(camera); 
 
-        // Переводим в экранные пиксели
         const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
         const y = (-(vector.y * 0.5) + 0.5) * window.innerHeight;
 
         const dist = Math.hypot(x - e.clientX, y - e.clientY);
         
-        // vector.z < 1 проверяет, что планета перед камерой, а не позади
         if (dist < minDistance && vector.z < 1) {
             minDistance = dist;
             closestPlanet = mesh;
@@ -432,7 +421,6 @@ function initThreeJS() {
     if (closestPlanet) {
       focusOnPlanet(closestPlanet);
     } else if (focusedMesh) {
-       // Закрываем, если клик не по панели
        if (e.clientY < window.innerHeight - document.getElementById('focusPanel').offsetHeight) unfocusPlanet();
     }
   });
@@ -475,9 +463,10 @@ window.toggleLighting = () => {
     btn.style.background = 'rgba(119, 235, 255, 0.15)';
     document.getElementById('hoverInfo').innerHTML = '<b>Осмотр системы</b><span>Кликните по любой планете для фокуса</span>';
   } else {
-    ambientLight.intensity = 0.05; 
+    ambientLight.intensity = 0.02; 
     inspectionLight.intensity = 0; 
-    sunLight.intensity = 500000; 
+    // Яркий свет, но благодаря ACESFilmic он не будет "выедать" цвета
+    sunLight.intensity = 5; 
     
     btn.innerHTML = '🌑 Реализм';
     btn.style.borderColor = 'rgba(255,255,255,0.2)';
@@ -486,12 +475,28 @@ window.toggleLighting = () => {
   }
 };
 
-// ==== ФОКУСИРОВКА ====
+// ==== ФОКУСИРОВКА И КАМЕРА ====
 window.focusOnPlanet = (mesh) => {
   focusedMesh = mesh;
   const p = mesh.userData.data;
-  controls.minDistance = p.r * 1.5; 
   
+  // Правильный отступ камеры: если есть кольца, отдаляемся сильнее, чтобы они влезли в кадр
+  const targetDist = p.rings ? p.r * 6.5 : p.r * 3.5; 
+  controls.minDistance = p.r * 1.5; 
+  controls.maxDistance = targetDist * 2;
+  
+  // Вычисляем позицию планеты
+  const targetPos = new THREE.Vector3();
+  mesh.getWorldPosition(targetPos);
+
+  // Мгновенно отодвигаем камеру на идеальное расстояние по вектору от планеты
+  const dir = camera.position.clone().sub(targetPos).normalize();
+  camera.position.copy(targetPos).add(dir.multiplyScalar(targetDist));
+  controls.target.copy(targetPos);
+  
+  // Обнуляем трекер прошлой позиции
+  mesh.userData.lastPos = targetPos.clone();
+
   document.getElementById('fpName').textContent = p.name;
   document.getElementById('fpTag').textContent = p.tagline;
   document.getElementById('fpStats').innerHTML = Object.entries(p.stats).map(([k,v])=>`<div class="stat-box"><div class="stat-val">${v}</div><div class="stat-lbl">${k}</div></div>`).join('');
@@ -504,6 +509,7 @@ window.focusOnPlanet = (mesh) => {
 window.unfocusPlanet = () => {
   focusedMesh = null;
   controls.minDistance = 15;
+  controls.maxDistance = 1500;
   
   document.getElementById('focusPanel').classList.remove('active'); 
   document.getElementById('hoverInfo').style.opacity = '1';
@@ -516,38 +522,39 @@ function animate() {
   if (!document.getElementById('solar').classList.contains('active')) return;
 
   const delta = clock.getDelta();
-  const timeMod = isAnimPaused ? 0 : 1; // Если пауза, множитель 0
+  const timeMod = isAnimPaused ? 0 : 1; 
 
-  // Вращение планет и колец
+  // Вращение планет и орбит
   planetMeshes.forEach(mesh => {
     const data = mesh.userData.data;
-    const axialRot = data.rotation * delta * 60 * timeMod; 
-    mesh.rotation.y += axialRot;
+    mesh.rotation.y += data.rotation * delta * 60 * timeMod;
     
-    // Вращаем орбиту медленнее, если в фокусе, но не останавливаем полностью
-    const orbitSpeed = (focusedMesh === mesh) ? 0.05 : 1; 
+    // Замедляем орбиту в 10 раз, если смотрим на планету, чтобы не кружилась голова
+    const orbitSpeed = (focusedMesh === mesh) ? 0.1 : 1; 
     mesh.userData.orbitGroup.rotation.y += data.period * 0.0001 * delta * 60 * orbitSpeed * timeMod;
   });
 
   // Вращение Солнца
   scene.children[2].rotation.y += 0.002 * timeMod;
 
+  // Идеальный трекинг камеры за планетой
   if (focusedMesh) {
-    const targetPos = new THREE.Vector3();
-    focusedMesh.getWorldPosition(targetPos);
-    controls.target.lerp(targetPos, 0.1); // Плавно двигаем якорь камеры за планетой
+    const currentPos = new THREE.Vector3();
+    focusedMesh.getWorldPosition(currentPos);
 
-    const r = focusedMesh.userData.data.r;
-    const targetDist = r * 3.5; // Идеальная дистанция для обзора
-    const currentDist = camera.position.distanceTo(targetPos);
-
-    // Плавный подлёт (избавились от зависаний)
-    if (currentDist > targetDist * 1.1) {
-        const dir = camera.position.clone().sub(targetPos).normalize();
-        const idealCameraPos = targetPos.clone().add(dir.multiplyScalar(targetDist));
-        camera.position.lerp(idealCameraPos, 0.06); // Плавный LERP
+    if (focusedMesh.userData.lastPos) {
+      // Считаем, насколько сдвинулась планета за этот кадр
+      const deltaPos = currentPos.clone().sub(focusedMesh.userData.lastPos);
+      
+      // Сдвигаем цель камеры и саму камеру на тот же вектор.
+      // Благодаря этому мы летим за планетой, но можем свободно вращать камеру пальцем!
+      controls.target.add(deltaPos);
+      camera.position.add(deltaPos);
     }
+    
+    focusedMesh.userData.lastPos.copy(currentPos);
   } else {
+    // Возвращаем фокус в центр системы
     controls.target.lerp(new THREE.Vector3(0,0,0), 0.05);
   }
 
