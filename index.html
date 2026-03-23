@@ -103,7 +103,7 @@ body.solar-lock{overflow:hidden;touch-action:none;}
     <div class="hero-head">
       <div class="app-badge">✨ Молниеносная загрузка & HD Текстуры</div>
       <h1 class="hero-title">Космический Атлас</h1>
-      <p class="hero-text">Интерактивная энциклопедия Солнечной системы с реалистичными кольцами, плавным управлением камерой и обзором орбит.</p>
+      <p class="hero-text">Интерактивная энциклопедия Солнечной системы со свободным осмотром планет, улучшенным светом и реалистичными моделями.</p>
     </div>
     <div class="menu-grid">
       <div class="nav-card glass" onclick="showSection('planets')">
@@ -167,6 +167,10 @@ body.solar-lock{overflow:hidden;touch-action:none;}
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
+// Используем надежные CDN для быстрой загрузки
+const CDN_PLANETS = 'https://cdn.jsdelivr.net/gh/jeromeetienne/threex.planets@master/images/';
+const CDN_THREE = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/textures/planets/';
+
 const PLANETS = [
   { id:'mercury', name:'Меркурий', r:2.8, dist:52, period:8, rotation:0.012, axialTilt:0.03, tagline:'Самая маленькая планета', stats:{'Диаметр':'4 879 км', 'Температура':'-173 / +427°C'}, facts:['Ближайшая к Солнцу планета.','Поверхность покрыта кратерами, как у Луны.'] },
   { id:'venus', name:'Венера', r:4.6, dist:78, period:12, rotation:0.005, axialTilt:3.09, tagline:'Самая горячая планета', stats:{'Диаметр':'12 104 км', 'Температура':'+464°C'}, facts:['Плотная атмосфера создаёт мощный парниковый эффект.','Венера вращается в обратную сторону.'] },
@@ -194,7 +198,6 @@ window.showSection = (id) => {
   document.body.classList.toggle('solar-lock', id === 'solar');
   
   if (id === 'solar') {
-      // Инициализация вынесена в setTimeout, чтобы не блокировать UI наложение классов
       setTimeout(() => {
           if (!isThreeInit) initThreeJS();
           if (renderer) onResize();
@@ -229,11 +232,11 @@ let focusDesiredTarget = new THREE.Vector3();
 let focusDesiredCameraPos = new THREE.Vector3();
 let defaultTarget = new THREE.Vector3(0, 0, 0);
 let defaultCameraPos = new THREE.Vector3(0, 250, 450);
-let timeScale = 1.0;
 let raycaster, mouse;
 let pointerDownPos = null, pointerMoved = false;
 let sunMesh = null;
-let isReturningToOrbit = false; // Флаг для красивого отлета камеры
+let isReturningToOrbit = false;
+let isCameraTransitioning = false; // Флаг для контроля свободы вращения камеры
 const clock = new THREE.Clock();
 
 function clamp(v, min, max){ return Math.min(Math.max(v, min), max); }
@@ -248,7 +251,6 @@ function loadTextureIntoMaterial(material, url, {colorSpace = THREE.SRGBColorSpa
 }
 
 function buildPlanetMaterial(planet){
-  // Оптимизация: вместо генерации canvas-текстур используем базовые цвета как быстрый fallback
   const PLANET_COLORS = {
       mercury: 0x888888, venus: 0xe3bb76, earth: 0x2f8fca, mars: 0xc1440e,
       jupiter: 0xd8ca9d, saturn: 0xead6b8, uranus: 0xd1e7e7, neptune: 0x5b5ddf
@@ -260,16 +262,14 @@ function buildPlanetMaterial(planet){
     metalness: 0.02
   });
 
-  if (planet.id === 'earth'){
-    loadTextureIntoMaterial(mat, 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg');
-  }
-  if (planet.id === 'mars') loadTextureIntoMaterial(mat, 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/marsmap1k.jpg');
-  if (planet.id === 'jupiter') loadTextureIntoMaterial(mat, 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/jupitermap.jpg');
-  if (planet.id === 'venus') loadTextureIntoMaterial(mat, 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/venusmap.jpg');
-  if (planet.id === 'mercury') loadTextureIntoMaterial(mat, 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/mercurymap.jpg');
-  if (planet.id === 'saturn') loadTextureIntoMaterial(mat, 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/saturnmap.jpg');
-  if (planet.id === 'uranus') loadTextureIntoMaterial(mat, 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/uranusmap.jpg');
-  if (planet.id === 'neptune') loadTextureIntoMaterial(mat, 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/neptunemap.jpg');
+  if (planet.id === 'earth') loadTextureIntoMaterial(mat, CDN_THREE + 'earth_atmos_2048.jpg');
+  if (planet.id === 'mars') loadTextureIntoMaterial(mat, CDN_PLANETS + 'marsmap1k.jpg');
+  if (planet.id === 'jupiter') loadTextureIntoMaterial(mat, CDN_PLANETS + 'jupitermap.jpg');
+  if (planet.id === 'venus') loadTextureIntoMaterial(mat, CDN_PLANETS + 'venusmap.jpg');
+  if (planet.id === 'mercury') loadTextureIntoMaterial(mat, CDN_PLANETS + 'mercurymap.jpg');
+  if (planet.id === 'saturn') loadTextureIntoMaterial(mat, CDN_PLANETS + 'saturnmap.jpg');
+  if (planet.id === 'uranus') loadTextureIntoMaterial(mat, CDN_PLANETS + 'uranusmap.jpg');
+  if (planet.id === 'neptune') loadTextureIntoMaterial(mat, CDN_PLANETS + 'neptunemap.jpg');
 
   return mat;
 }
@@ -279,7 +279,6 @@ function buildRing(planet){
   const inner = planet.r * planet.ringInner;
   const geo = new THREE.RingGeometry(inner, outer, 128);
   
-  // Коррекция UV-развертки для колец (чтобы текстура легла радиально)
   const pos = geo.attributes.position;
   const uvs = geo.attributes.uv;
   for (let i = 0; i < uvs.count; i++) {
@@ -300,41 +299,35 @@ function buildRing(planet){
     depthWrite: false
   });
 
-  // Загрузка реальных текстур колец
-  const mapUrl = planet.id === 'saturn' 
-    ? 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/saturnringcolor.jpg'
-    : 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/uranusringcolour.jpg';
-  
-  const alphaUrl = planet.id === 'saturn'
-    ? 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/saturnringpattern.gif'
-    : 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/uranusringtrans.gif';
+  const mapUrl = planet.id === 'saturn' ? CDN_PLANETS + 'saturnringcolor.jpg' : CDN_PLANETS + 'uranusringcolour.jpg';
+  const alphaUrl = planet.id === 'saturn' ? CDN_PLANETS + 'saturnringpattern.gif' : CDN_PLANETS + 'uranusringtrans.gif';
 
   textureLoader.load(mapUrl, tex => { ringMat.map = tex; ringMat.needsUpdate = true; });
   textureLoader.load(alphaUrl, tex => { ringMat.alphaMap = tex; ringMat.needsUpdate = true; });
 
   const ring = new THREE.Mesh(geo, ringMat);
   ring.rotation.x = Math.PI / 2;
-  ring.userData.spin = planet.id === 'saturn' ? 0.005 : 0.008; // Сделали анимацию заметнее
+  ring.userData.spin = planet.id === 'saturn' ? 0.005 : 0.008;
 
   return ring;
 }
 
 function buildSun(){
   const sunGroup = new THREE.Group();
-  const sunMat = new THREE.MeshBasicMaterial({ color: 0xffcc00 }); // Желтый цвет до загрузки
+  const sunMat = new THREE.MeshBasicMaterial({ color: 0xffcc00 }); 
   const geo = new THREE.SphereGeometry(22, 64, 64);
   sunMesh = new THREE.Mesh(geo, sunMat);
   sunGroup.add(sunMesh);
 
-  textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/sun.jpg', tex => {
+  textureLoader.load(CDN_THREE + 'sun.jpg', tex => {
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.anisotropy = maxAnisotropy;
-    sunMat.color.setHex(0xffffff); // Убираем желтый тинт
+    sunMat.color.setHex(0xffffff);
     sunMat.map = tex;
     sunMat.needsUpdate = true;
   });
 
-  // Чистое свечение без зеленых артефактов
+  // Исправлено: замена альфы черного цвета на прозрачный оранжевый (убирает зеленые артефакты)
   const canvas = document.createElement('canvas');
   canvas.width = 128; canvas.height = 128;
   const ctx = canvas.getContext('2d');
@@ -342,7 +335,7 @@ function buildSun(){
   gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
   gradient.addColorStop(0.2, 'rgba(255, 200, 100, 0.8)');
   gradient.addColorStop(0.5, 'rgba(255, 120, 0, 0.4)');
-  gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  gradient.addColorStop(1, 'rgba(255, 120, 0, 0)'); // ТЕПЕРЬ ТУТ ЧИСТЫЙ ПРОЗРАЧНЫЙ ОРАНЖЕВЫЙ
   ctx.fillStyle = gradient;
   ctx.fillRect(0,0,128,128);
 
@@ -410,14 +403,15 @@ function initThreeJS(){
   controls.maxPolarAngle = Math.PI - 0.15;
   controls.target.copy(defaultTarget);
 
-  ambientLight = new THREE.AmbientLight(0xffffff, 1.18);
+  // Усилили базовый свет для режима "Осмотр"
+  ambientLight = new THREE.AmbientLight(0xffffff, 2.5);
   scene.add(ambientLight);
 
   sunLight = new THREE.PointLight(0xfff0d8, 0, 0, 2);
   sunLight.position.set(0, 0, 0);
   scene.add(sunLight);
   
-  inspectionLight = new THREE.DirectionalLight(0xffffff, 1.35);
+  inspectionLight = new THREE.DirectionalLight(0xffffff, 3.5);
   inspectionLight.position.set(0, 0.2, 1);
   camera.add(inspectionLight);
   scene.add(camera);
@@ -512,10 +506,10 @@ window.toggleLighting = () => {
   isInspectionMode = !isInspectionMode;
   const btn = document.getElementById('lightToggleBtn');
   if (isInspectionMode){
-    ambientLight.intensity = 1.18; inspectionLight.intensity = 1.35; sunLight.intensity = 0;
+    ambientLight.intensity = 2.5; inspectionLight.intensity = 3.5; sunLight.intensity = 0;
     btn.textContent = '💡 Осмотр'; btn.classList.add('active');
   } else {
-    ambientLight.intensity = 0.05; inspectionLight.intensity = 0; sunLight.intensity = 2800;
+    ambientLight.intensity = 0.05; inspectionLight.intensity = 0; sunLight.intensity = 40000;
     btn.textContent = '🌑 Реализм'; btn.classList.remove('active');
   }
 };
@@ -530,7 +524,7 @@ window.toggleOrbitAnimation = () => {
 window.focusOnPlanet = (mesh) => {
   focusedMesh = mesh;
   isReturningToOrbit = false;
-  timeScale = 0;
+  isCameraTransitioning = true; // Запускаем транзитный полет камеры
 
   const p = mesh.userData.data;
   document.getElementById('fpName').textContent = p.name;
@@ -540,20 +534,7 @@ window.focusOnPlanet = (mesh) => {
   document.getElementById('focusPanel').classList.add('active');
   document.getElementById('hoverInfo').style.opacity = '0';
 
-  const worldPos = new THREE.Vector3();
-  mesh.getWorldPosition(worldPos);
-  
-  // УВЕЛИЧЕН КОЭФФИЦИЕНТ ОТДАЛЕНИЯ, чтобы планета полностью помещалась в кадр
   const boundingRadius = p.rings ? p.r * 3.5 : p.r * 1.5;
-  const desiredDistance = clamp(boundingRadius * (isTouchDevice ? 4.5 : 4.0), 40, 180); 
-  
-  const dir = camera.position.clone().sub(worldPos);
-  if (dir.lengthSq() < 0.001) dir.set(1, 0.3, 1);
-  dir.normalize();
-  
-  focusDesiredTarget.copy(worldPos);
-  focusDesiredCameraPos.copy(worldPos).add(dir.multiplyScalar(desiredDistance)).add(new THREE.Vector3(0, p.r * 0.5, 0));
-  
   controls.minDistance = Math.max(12, boundingRadius * 1.5);
   controls.maxDistance = Math.max(300, boundingRadius * 12);
 };
@@ -561,7 +542,7 @@ window.focusOnPlanet = (mesh) => {
 window.unfocusPlanet = () => {
   focusedMesh = null;
   isReturningToOrbit = true;
-  timeScale = orbitAnimationPaused ? 0 : 1;
+  isCameraTransitioning = false;
   controls.minDistance = 16;
   controls.maxDistance = 1600;
   document.getElementById('focusPanel').classList.remove('active');
@@ -573,37 +554,51 @@ function animate(){
   if (!document.getElementById('solar').classList.contains('active')) return;
 
   const delta = Math.min(clock.getDelta(), 0.033);
-  const orbitScale = orbitAnimationPaused ? 0 : timeScale;
+  
+  // КНОПКА ПАУЗЫ ТЕПЕРЬ ОСТАНАВЛИВАЕТ ВСЕ (И ОРБИТЫ, И ВРАЩЕНИЕ ВОКРУГ ОСИ)
+  const timeScale = orbitAnimationPaused ? 0 : 1;
 
-  if (sunMesh) sunMesh.rotation.y += delta * 0.06;
+  if (sunMesh) sunMesh.rotation.y += delta * 0.06 * timeScale;
 
   for (const mesh of planetMeshes){
     const data = mesh.userData.data;
-    mesh.rotation.y += data.rotation * delta * 60;
-    mesh.userData.orbitGroup.rotation.y += data.period * 0.0001 * orbitScale * delta * 60;
+    mesh.rotation.y += data.rotation * delta * 60 * timeScale;
+    mesh.userData.orbitGroup.rotation.y += data.period * 0.0001 * delta * 60 * timeScale;
     if (mesh.userData.ring){
-      mesh.userData.ring.rotation.z += mesh.userData.ring.userData.spin * delta * 60;
+      mesh.userData.ring.rotation.z += mesh.userData.ring.userData.spin * delta * 60 * timeScale;
     }
   }
 
   if (focusedMesh){
     const currentPlanetPos = new THREE.Vector3();
     focusedMesh.getWorldPosition(currentPlanetPos);
-    focusDesiredTarget.lerp(currentPlanetPos, 0.2);
     
-    const dir = focusDesiredCameraPos.clone().sub(focusDesiredTarget).normalize();
-    const p = focusedMesh.userData.data;
-    
-    // Поддержка дистанции в реальном времени
-    const boundingRadius = p.rings ? p.r * 3.5 : p.r * 1.5;
-    const desiredDistance = clamp(boundingRadius * (isTouchDevice ? 4.5 : 4.0), 40, 180);
-    
-    focusDesiredCameraPos.copy(focusDesiredTarget).add(dir.multiplyScalar(desiredDistance)).add(new THREE.Vector3(0, p.r * 0.5, 0));
-    
-    camera.position.lerp(focusDesiredCameraPos, 0.07);
-    controls.target.lerp(focusDesiredTarget, 0.12);
+    if (isCameraTransitioning) {
+        // Жесткий фокус при сближении
+        focusDesiredTarget.lerp(currentPlanetPos, 0.2);
+        const dir = focusDesiredCameraPos.clone().sub(focusDesiredTarget).normalize();
+        const p = focusedMesh.userData.data;
+        
+        const boundingRadius = p.rings ? p.r * 3.5 : p.r * 1.5;
+        const desiredDistance = clamp(boundingRadius * (isTouchDevice ? 4.5 : 4.0), 40, 180);
+        
+        focusDesiredCameraPos.copy(focusDesiredTarget).add(dir.multiplyScalar(desiredDistance)).add(new THREE.Vector3(0, p.r * 0.5, 0));
+        
+        camera.position.lerp(focusDesiredCameraPos, 0.07);
+        controls.target.lerp(focusDesiredTarget, 0.12);
+
+        // Отпускаем камеру, когда приблизились (даем возможность вращать)
+        if (camera.position.distanceTo(focusDesiredCameraPos) < 2.0) {
+            isCameraTransitioning = false;
+        }
+    } else {
+        // Свободное вращение (OrbitControls работает сам). Мы только тащим камеру вслед за планетой, если она летит по орбите.
+        const planetDelta = currentPlanetPos.clone().sub(focusDesiredTarget);
+        camera.position.add(planetDelta);
+        controls.target.copy(currentPlanetPos);
+        focusDesiredTarget.copy(currentPlanetPos); // обновляем якорь
+    }
   } else if (isReturningToOrbit) {
-    // Красивый отлет назад к общему виду
     controls.target.lerp(defaultTarget, 0.08);
     camera.position.lerp(defaultCameraPos, 0.04);
     if (camera.position.distanceTo(defaultCameraPos) < 5) isReturningToOrbit = false;
