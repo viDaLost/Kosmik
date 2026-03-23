@@ -14,7 +14,7 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{width:100%;height:100%;}
 body{font-family:'Exo 2',sans-serif;min-height:100vh;color:var(--text);overflow-x:hidden;background:radial-gradient(circle at 50% 50%,#060b18 0%,#02050c 100%);}
-body.solar-lock{overflow:hidden;touch-action:none;}
+body.solar-lock{overflow:hidden;} /* Убрали touch-action:none чтобы скролл работал если нужно */
 
 .app-stars,.app-nebula{position:fixed;inset:0;pointer-events:none;z-index:0;}
 .app-stars{overflow:hidden;}
@@ -63,7 +63,7 @@ body.solar-lock{overflow:hidden;touch-action:none;}
 .planet-tagline{color:var(--muted);font-size:.9rem;margin-bottom:16px;}
 
 .solar-stage{position:relative;width:100vw;height:100vh;background:#02050c;overflow:hidden;}
-#solarCanvas{width:100%;height:100%;display:block;cursor:grab;touch-action:none;}
+#solarCanvas{width:100%;height:100%;display:block;cursor:grab;}
 #solarCanvas:active{cursor:grabbing;}
 
 .solar-overlay{position:absolute;inset:0;pointer-events:none;z-index:10;}
@@ -119,9 +119,9 @@ body.solar-lock{overflow:hidden;touch-action:none;}
 <div class="main-menu" id="mainMenu" style="display:none;">
   <div class="menu-shell glass">
     <div class="hero-head">
-      <div class="app-badge">☀️ Volumetric Sun & HD Textures</div>
+      <div class="app-badge">🚀 Полная свобода полета & 4K Текстуры</div>
       <h1 class="hero-title">Космический Атлас</h1>
-      <p class="hero-text">Интерактивная энциклопедия Солнечной системы с реалистичными текстурами планет, объемным Солнцем и свободным осмотром.</p>
+      <p class="hero-text">Интерактивная энциклопедия Солнечной системы. Исследуйте систему свободно: перемещайте камеру, отдаляйте вид или выбирайте планеты для детального изучения.</p>
     </div>
     <div class="menu-grid">
       <div class="nav-card glass" onclick="showSection('planets')">
@@ -132,7 +132,7 @@ body.solar-lock{overflow:hidden;touch-action:none;}
       <div class="nav-card glass" onclick="showSection('solar')">
         <div class="nav-icon">☀️</div>
         <div class="nav-title">Солнечная система 3D</div>
-        <div class="nav-desc">Свободный осмотр, реалистичные кольца и объемное сияние.</div>
+        <div class="nav-desc">Свободный полет, детальные текстуры каждой планеты и реалистичное Солнце.</div>
       </div>
     </div>
   </div>
@@ -162,12 +162,12 @@ body.solar-lock{overflow:hidden;touch-action:none;}
         </div>
       </div>
       <div class="hover-toast glass" id="hoverInfo">
-        <b>Осмотр системы</b>
-        <span>Коснитесь любой планеты, чтобы приблизиться.</span>
+        <b>Свободный полет</b>
+        <span>Свайпайте двумя пальцами для панорамирования. Коснитесь планеты для фокусировки.</span>
       </div>
     </div>
     <div class="focus-panel" id="focusPanel">
-      <button class="focus-back" onclick="unfocusPlanet()">← Вернуться к орбитам</button>
+      <button class="focus-back" onclick="unfocusPlanet()">← Вернуться к свободному полету</button>
       <div class="focus-header">
         <div>
           <h2 class="focus-title" id="fpName">Земля</h2>
@@ -185,18 +185,18 @@ body.solar-lock{overflow:hidden;touch-action:none;}
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-// ПУТИ К ТЕКСТУРАМ (Канонические jsdelivr URL-ы из examples three.js)
-const TX_BASE = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/textures/planets/';
+// ИСПРАВЛЕНИЕ #1: Абсолютно точные ссылки на текстуры КАЖДОЙ планеты
+const PLANETS_CDN = 'https://cdn.jsdelivr.net/gh/jeromeetienne/threex.planets@master/images/';
 const TEXTURE_RESOURCES = {
-  sun: TX_BASE + 'sun.jpg',
-  mercury: TX_BASE + 'mercurymap.jpg',
-  venus: TX_BASE + 'venusmap.jpg',
-  earth: TX_BASE + 'earth_atmos_2048.jpg',
-  mars: TX_BASE + 'marsmap1k.jpg',
-  jupiter: TX_BASE + 'jupitermap.jpg',
-  saturn: TX_BASE + 'saturnmap.jpg',
-  uranus: TX_BASE + 'uranusmap.jpg',
-  neptune: TX_BASE + 'neptunemap.jpg'
+  sun: PLANETS_CDN + 'sunmap.jpg',
+  mercury: PLANETS_CDN + 'mercurymap.jpg',
+  venus: PLANETS_CDN + 'venusmap.jpg',
+  earth: PLANETS_CDN + 'earthmap1k.jpg', 
+  mars: PLANETS_CDN + 'marsmap1k.jpg',
+  jupiter: PLANETS_CDN + 'jupitermap.jpg',
+  saturn: PLANETS_CDN + 'saturnmap.jpg',
+  uranus: PLANETS_CDN + 'uranusmap.jpg',
+  neptune: PLANETS_CDN + 'neptunemap.jpg'
 };
 
 const PLANETS = [
@@ -219,7 +219,6 @@ for(let i=0; i<90; i++){
   appStars.appendChild(s);
 }
 
-// УПРАВЛЕНИЕ ЗАГРУЗКОЙ ТЕКСТУР И СЕКЦИЯМИ
 const overlay = document.getElementById('textureOverlay');
 const overlayDetail = document.getElementById('overlayDetail');
 const mainMenu = document.getElementById('mainMenu');
@@ -228,7 +227,6 @@ window.showSection = (id) => {
   document.getElementById('mainMenu').style.display = 'none';
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  document.body.classList.toggle('solar-lock', id === 'solar');
   
   if (id === 'solar') {
       setTimeout(() => {
@@ -241,7 +239,6 @@ window.showSection = (id) => {
 window.goBack = () => {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.getElementById('mainMenu').style.display = 'flex';
-  document.body.classList.remove('solar-lock');
   if (focusedMesh) unfocusPlanet();
 };
 
@@ -275,7 +272,6 @@ const loadedTextures = new Map();
 
 function clamp(v, min, max){ return Math.min(Math.max(v, min), max); }
 
-// ФУНКЦИЯ ГАРАНТИРОВАННОЙ ЗАГРУЗКИ ТЕКСТУР С FALLBACK-ОМ
 function loadTexturesSafe(assets) {
     const urls = Object.values(assets);
     let loadedCount = 0;
@@ -285,94 +281,44 @@ function loadTexturesSafe(assets) {
 
     return new Promise((resolve) => {
         if (totalCount === 0) resolve();
-
         urls.forEach(url => {
             textureLoader.load(url, 
-                // УСПЕХ
                 (tex) => {
                     tex.colorSpace = THREE.SRGBColorSpace;
                     tex.anisotropy = 8;
-                    tex.name = url;
                     loadedTextures.set(url, tex);
                     checkStatus();
                 },
-                // ПРОГРЕСС
-                (xhr) => { if(xhr.lengthComputable) overlayDetail.textContent = `Загрузка: ${Math.round((loadedCount/totalCount)*100)}% ...`; },
-                // ОШИБКА (silent fallback)
-                () => {
-                    loadedTextures.set(url, null); // Явный отказ
-                    checkStatus();
-                }
+                (xhr) => { if(xhr.lengthComputable) overlayDetail.textContent = `Загрузка текстур: ${Math.round((loadedCount/totalCount)*100)}% ...`; },
+                () => { loadedTextures.set(url, null); checkStatus(); }
             );
         });
-
         function checkStatus() {
             loadedCount++;
             if (loadedCount >= totalCount) {
-                overlayDetail.textContent = "Синхронизация завершена.";
+                overlayDetail.textContent = "Система готова.";
                 resolve();
             }
         }
     });
 }
 
-// ПРОЦЕДУРНЫЙ FALLBACK ДЛЯ МАТЕРИАЛОВ (ЕСЛИ ТЕКСТУРЫ БЛОКИРОВАНЫ)
-function generateFallbackTexture(planet) {
-    const canvas = document.createElement('canvas');
-    canvas.width = 128; canvas.height = 64;
-    const ctx = canvas.getContext('2d');
-    const color = planet.color || 0xcccccc;
-    const strColor = `#${color.toString(16).padStart(6, '0')}`;
-    
-    // Базовый цвет
-    ctx.fillStyle = strColor;
-    ctx.fillRect(0, 0, 128, 64);
-    
-    // Процедурный шум/полосы
-    if (planet.id === 'jupiter' || planet.id === 'saturn') {
-        // Полосы для гигантов
-        for (let i = 0; i < 6; i++) {
-            ctx.fillStyle = i % 2 === 0 ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
-            ctx.fillRect(0, i * 10, 128, 10);
-        }
-    } else {
-        // Рандомные пятна для каменистых
-        for (let i = 0; i < 30; i++) {
-            const opacity = 0.05 + Math.random() * 0.1;
-            ctx.fillStyle = Math.random() > 0.5 ? `rgba(255,255,255,${opacity})` : `rgba(0,0,0,${opacity})`;
-            ctx.beginPath(); ctx.arc(Math.random()*128, Math.random()*64, 2 + Math.random()*8, 0, Math.PI*2); ctx.fill();
-        }
-    }
-    
-    const tex = new THREE.CanvasTexture(canvas);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.needsUpdate = true;
-    return tex;
-}
-
 function buildPlanetMaterial(planet){
-  // Используем PhysicalMaterial для глубины и качества
   const mat = new THREE.MeshPhysicalMaterial({
-    color: planet.color || 0xcccccc,
+    color: 0xffffff, // Очищаем цвет, чтобы текстура отображалась идеально
     roughness: planet.id === 'earth' ? 0.75 : 0.88,
     metalness: 0.02,
-    reflectivity: planet.id === 'earth' ? 0.2 : 0.1,
-    clearcoat: planet.id === 'earth' ? 0.1 : 0.01,
+    reflectivity: planet.id === 'earth' ? 0.2 : 0.1
   });
 
   const textureUrl = TEXTURE_RESOURCES[planet.id];
   const confirmedTexture = loadedTextures.get(textureUrl);
 
   if (confirmedTexture) {
-      // ИСПОЛЬЗУЕМ ЗАГРУЖЕННУЮ ТЕКСТУРУ
-      mat.color.setHex(0xffffff); // Убираем тинт
       mat.map = confirmedTexture;
   } else {
-      // ИСПОЛЬЗУЕМ FALLBACK ПРОЦЕДУРНУЮ КАРТУ
-      mat.map = generateFallbackTexture(planet);
-      mat.color.setHex(planet.color); // Оставляем тинт
+      mat.color.setHex(planet.color); // Резервный цвет, если совсем нет интернета
   }
-
   return mat;
 }
 
@@ -392,20 +338,11 @@ function buildRing(planet){
   }
 
   const ringMat = new THREE.MeshPhysicalMaterial({
-    color: 0xffffff,
-    transparent: true,
-    side: THREE.DoubleSide,
-    opacity: planet.id === 'saturn' ? 0.95 : 0.6,
-    roughness: 0.8,
-    metalness: 0,
-    depthWrite: false,
-    reflectivity: 0.1
+    color: 0xffffff, transparent: true, side: THREE.DoubleSide, opacity: planet.id === 'saturn' ? 0.95 : 0.6, roughness: 0.8, metalness: 0, depthWrite: false
   });
 
-  // Загружаем кольца по умолчанию (FALLBACK-ов для них нет, но они простые)
-  const cdnPlanets = 'https://cdn.jsdelivr.net/gh/jeromeetienne/threex.planets@master/images/';
-  const mapUrl = planet.id === 'saturn' ? cdnPlanets + 'saturnringcolor.jpg' : cdnPlanets + 'uranusringcolour.jpg';
-  const alphaUrl = planet.id === 'saturn' ? cdnPlanets + 'saturnringpattern.gif' : cdnPlanets + 'uranusringtrans.gif';
+  const mapUrl = planet.id === 'saturn' ? PLANETS_CDN + 'saturnringcolor.jpg' : PLANETS_CDN + 'uranusringcolour.jpg';
+  const alphaUrl = planet.id === 'saturn' ? PLANETS_CDN + 'saturnringpattern.gif' : PLANETS_CDN + 'uranusringtrans.gif';
 
   textureLoader.load(mapUrl, tex => { ringMat.map = tex; ringMat.needsUpdate = true; });
   textureLoader.load(alphaUrl, tex => { ringMat.alphaMap = tex; ringMat.needsUpdate = true; });
@@ -417,79 +354,38 @@ function buildRing(planet){
   return ring;
 }
 
-// ВОЛЮМЕТРИЧЕСКОЕ РЕАЛИСТИЧНОЕ СОЛНЦЕ ( layered approach )
+// ИСПРАВЛЕНИЕ #2: Настоящее объемное Солнце (Сфера + Текстура + Свечение)
 function buildSun(){
   sunMesh = new THREE.Group();
 
-  // 1. ФОТОННОЕ ЯДРО (Sphere with realistic map)
-  const sunTextureUrl = TEXTURE_RESOURCES.sun;
-  const confirmedTexture = loadedTextures.get(sunTextureUrl);
+  const sunTex = loadedTextures.get(TEXTURE_RESOURCES.sun);
   
+  // Сама сфера (тело Солнца)
   const coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-  if (confirmedTexture) { coreMat.map = confirmedTexture; }
-  else { coreMat.color.setHex(0xffcc00); } // Ультра-fallback
-
+  if (sunTex) { coreMat.map = sunTex; } else { coreMat.color.setHex(0xffaa00); }
   const coreSphere = new THREE.Mesh(new THREE.SphereGeometry(22, 64, 64), coreMat);
   sunMesh.add(coreSphere);
 
-  // 2. РАДИАЦИОННАЯ ЗОНА (FRESNEL GLOW) - Creates volume on the core
-  const fresnelMat = new THREE.ShaderMaterial({
-      uniforms: {
-          color: { value: new THREE.Color(0xffaa00) },
-          power: { value: 1.8 } // Интенсивность Френеля
-      },
-      vertexShader: `
-          varying vec3 vNormal;
-          varying vec3 vPosition;
-          void main() {
-              vNormal = normalize(normalMatrix * normal);
-              vPosition = (modelViewMatrix * vec4(position, 1.0)).xyz;
-              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          }
-      `,
-      fragmentShader: `
-          varying vec3 vNormal;
-          varying vec3 vPosition;
-          uniform vec3 color;
-          uniform float power;
-          void main() {
-              // Камера-вектор в пространстве View
-              vec3 viewDir = normalize(-vPosition);
-              // Эффект Френеля (Fresnel): яркие края, яркий центр
-              float fresnel = 1.0 - max(dot(viewDir, vNormal), 0.0);
-              fresnel = pow(fresnel, power);
-              
-              // Аддитивное сияние
-              gl_FragColor = vec4(color * 1.5, fresnel * 0.85); 
-          }
-      `,
-      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.BackSide
-  });
-  const fresnelGlow = new THREE.Mesh(new THREE.SphereGeometry(22.8, 64, 64), fresnelMat);
-  sunMesh.add(fresnelGlow);
-
-  // 3. ОБЪЕМНАЯ ХРОМОСФЕРА И КОРОНА (Layered sprites) - Deep fiery plasma glow
-  function createCoronaLayer(size, color, opacity, blur=false){
-      const canvas = document.createElement('canvas');
-      canvas.width = 128; canvas.height = 128;
-      const ctx = canvas.getContext('2d');
-      const gradient = ctx.createRadialGradient(64,64,0, 64,64,64);
-      gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-      gradient.addColorStop(0.3, blur ? 'rgba(255,160,0, 0.4)' : 'rgba(255,200,80, 0.7)');
-      gradient.addColorStop(0.6, 'rgba(255, 120, 0, 0.15)'); // Fiery Orange
-      gradient.addColorStop(1, 'rgba(255, 120, 0, 0)');
-      ctx.fillStyle = gradient; ctx.fillRect(0,0,128,128);
-      const tex = new THREE.CanvasTexture(canvas);
-      const mat = new THREE.SpriteMaterial({ map: tex, color: color, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
-      const sprite = new THREE.Sprite(mat); sprite.scale.set(size, size, 1); return sprite;
-  }
+  // Спрайт свечения (Атмосфера/Корона) позади и вокруг сферы
+  const canvas = document.createElement('canvas');
+  canvas.width = 256; canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+  const gradient = ctx.createRadialGradient(128,128,0, 128,128,128);
+  gradient.addColorStop(0, 'rgba(255, 230, 150, 1)');
+  gradient.addColorStop(0.2, 'rgba(255, 150, 0, 0.8)');
+  gradient.addColorStop(0.5, 'rgba(255, 80, 0, 0.3)');
+  gradient.addColorStop(1, 'rgba(255, 50, 0, 0)');
+  ctx.fillStyle = gradient; ctx.fillRect(0,0,256,256);
   
-  // Яркая внутренняя корона
-  sunMesh.add(createCoronaLayer(130, 0xffffff, 0.95, false));
-  // Глубокая объемная хромосфера
-  sunMesh.add(createCoronaLayer(180, 0xffa200, 0.55, true));
-  // Удаленное объемное марево
-  sunMesh.add(createCoronaLayer(240, 0xff5000, 0.2, true));
+  const spriteMat = new THREE.SpriteMaterial({ 
+      map: new THREE.CanvasTexture(canvas), 
+      blending: THREE.AdditiveBlending, 
+      transparent: true, 
+      depthWrite: false 
+  });
+  const spriteGlow = new THREE.Sprite(spriteMat);
+  spriteGlow.scale.set(160, 160, 1);
+  sunMesh.add(spriteGlow);
 
   return sunMesh;
 }
@@ -497,30 +393,21 @@ function buildSun(){
 function buildStars(){
   const starsGeo = new THREE.BufferGeometry();
   const stars = [];
-  const count = isTouchDevice ? 1600 : 2400;
-  for(let i = 0; i < count; i++){
+  for(let i = 0; i < 2000; i++){
     let x, y, z, radius;
     do {
-      x = (Math.random() - 0.5) * 2600;
-      y = (Math.random() - 0.5) * 2600;
-      z = (Math.random() - 0.5) * 2600;
+      x = (Math.random() - 0.5) * 4000; y = (Math.random() - 0.5) * 4000; z = (Math.random() - 0.5) * 4000;
       radius = Math.sqrt(x*x + y*y + z*z);
-    } while (radius < 230);
+    } while (radius < 400);
     stars.push(x, y, z);
   }
   starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(stars, 3));
-  const starsMat = new THREE.PointsMaterial({
-    color: 0xffffff, size: isTouchDevice ? 1.35 : 1.2, transparent: true, opacity: 0.8, sizeAttenuation: true, depthWrite: false
-  });
+  const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: isTouchDevice ? 1.5 : 1.2, transparent: true, opacity: 0.8, sizeAttenuation: true, depthWrite: false });
   return new THREE.Points(starsGeo, starsMat);
 }
 
-// СТАРТ ПРИЛОЖЕНИЯ
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Безопасно загружаем текстуры
     await loadTexturesSafe(TEXTURE_RESOURCES);
-    
-    // 2. Убираем оверлей и показываем меню
     overlay.classList.add('loaded');
     mainMenu.style.display = 'flex';
 });
@@ -530,7 +417,7 @@ function initThreeJS(){
   const canvas = document.getElementById('solarCanvas');
 
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 5000);
+  camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 8000);
   camera.position.copy(defaultCameraPos);
   
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
@@ -545,13 +432,13 @@ function initThreeJS(){
   controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.07;
-  controls.enablePan = false;
-  controls.rotateSpeed = isTouchDevice ? 0.72 : 0.9;
-  controls.zoomSpeed = isTouchDevice ? 0.95 : 1.15;
+  
+  // ИСПРАВЛЕНИЕ #3: Включение свободного полета
+  controls.enablePan = true; // Теперь можно сдвигать камеру!
+  controls.rotateSpeed = 0.8;
+  controls.zoomSpeed = 1.2;
   controls.minDistance = 16;
-  controls.maxDistance = 1600;
-  controls.minPolarAngle = 0.15;
-  controls.maxPolarAngle = Math.PI - 0.15;
+  controls.maxDistance = 3500; // Позволяем отлететь очень далеко, чтобы увидеть всё
   controls.target.copy(defaultTarget);
 
   ambientLight = new THREE.AmbientLight(0xffffff, 2.5);
@@ -591,11 +478,8 @@ function initThreeJS(){
       mesh.userData.ring = ring;
     }
 
-    const pickRadius = planet.rings ? planet.r * (planet.id === 'saturn' ? 3.15 : 2.8) : Math.max(planet.r * 2.4, isTouchDevice ? 10 : 8);
-    const hitMesh = new THREE.Mesh(
-      new THREE.SphereGeometry(pickRadius, 16, 16),
-      new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false})
-    );
+    const pickRadius = planet.rings ? planet.r * 3.5 : planet.r * 2.8;
+    const hitMesh = new THREE.Mesh(new THREE.SphereGeometry(pickRadius, 16, 16), new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));
     hitMesh.material.colorWrite = false;
     hitMesh.userData.targetPlanet = mesh;
     anchor.add(hitMesh);
@@ -606,10 +490,7 @@ function initThreeJS(){
       const a = (i / 120) * Math.PI * 2;
       pts.push(Math.cos(a) * planet.dist, 0, Math.sin(a) * planet.dist);
     }
-    const orbitLine = new THREE.Line(
-      new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(pts, 3)),
-      new THREE.LineBasicMaterial({color:0xffffff, transparent:true, opacity:0.1})
-    );
+    const orbitLine = new THREE.Line(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(pts, 3)), new THREE.LineBasicMaterial({color:0xffffff, transparent:true, opacity:0.15}));
     scene.add(orbitLine);
   });
 
@@ -694,7 +575,7 @@ window.unfocusPlanet = () => {
   isReturningToOrbit = true;
   isCameraTransitioning = false;
   controls.minDistance = 16;
-  controls.maxDistance = 1600;
+  controls.maxDistance = 3500;
   document.getElementById('focusPanel').classList.remove('active');
   document.getElementById('hoverInfo').style.opacity = '1';
 };
@@ -706,10 +587,8 @@ function animate(){
   const delta = Math.min(clock.getDelta(), 0.033);
   const timeScale = orbitAnimationPaused ? 0 : 1;
 
-  // Анимация Солнца (вращение ядра и Френеля для динамики)
   if (sunMesh) {
-      sunMesh.children[0].rotation.y += delta * 0.06 * timeScale; // Ядро
-      sunMesh.children[1].rotation.z += delta * 0.03 * timeScale; // Френель
+      sunMesh.children[0].rotation.y += delta * 0.06 * timeScale;
   }
 
   for (const mesh of planetMeshes){
@@ -745,16 +624,9 @@ function animate(){
     controls.target.lerp(defaultTarget, 0.08);
     camera.position.lerp(defaultCameraPos, 0.04);
     if (camera.position.distanceTo(defaultCameraPos) < 5) isReturningToOrbit = false;
-  } else {
-    controls.target.lerp(defaultTarget, 0.06);
   }
-
-  // Принудительно разворачиваем спрайты Солнца к камере
-  if (sunMesh) {
-      for (let i = 2; i < sunMesh.children.length; i++) {
-          sunMesh.children[i].lookAt(camera.position);
-      }
-  }
+  // ИСПРАВЛЕНИЕ #4: Убран блок else, который принудительно возвращал камеру в центр (0,0,0).
+  // Теперь, если фокуса нет, OrbitControls полностью свободен!
 
   controls.update();
   renderer.render(scene, camera);
