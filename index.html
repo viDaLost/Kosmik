@@ -73,6 +73,19 @@ body.solar-lock{overflow:hidden;}
 .btn-3d:hover{background:rgba(255,255,255,.15);}
 .btn-3d.active{background:rgba(119,235,255,.15);border-color:var(--cyan);color:#dffbff;}
 
+/* Стилизация выпадающего списка планет */
+.planet-select {
+    appearance: none; -webkit-appearance: none;
+    background-color: rgba(10, 16, 36, 0.8) !important;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2377ebff%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px top 50%;
+    background-size: 10px auto;
+    padding-right: 38px;
+    min-width: 180px;
+}
+.planet-select option { background: #040814; color: #fff; font-weight: 500; }
+
 .hover-toast{position:absolute;left:50%;bottom:calc(22px + var(--safe-bottom));transform:translateX(-50%);padding:14px 22px;border-radius:22px;text-align:center;pointer-events:none;transition:opacity .3s;max-width:min(90vw,420px);}
 .hover-toast b{display:block;font-family:'Orbitron',sans-serif;color:var(--cyan);font-size:clamp(1rem,3vw,1.1rem);}
 .hover-toast span{font-size:.95rem;color:var(--muted);line-height:1.5;}
@@ -92,7 +105,7 @@ body.solar-lock{overflow:hidden;}
 .facts-list li{padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.03);border-left:3px solid var(--cyan);font-size:.95rem;line-height:1.45;color:#d5e9ff;}
 
 @media (max-width: 900px){.menu-grid{grid-template-columns:1fr;} .top-bar-3d{flex-direction:column;align-items:stretch;} .top-bar-group{width:100%;} .top-bar-group .btn-3d{flex:1 1 calc(50% - 6px);} .top-bar-group:first-child .btn-3d{flex:1 1 100%;}}
-@media (max-width: 760px){.main-menu{padding:16px;} .menu-shell{padding:18px;border-radius:24px;} .hero-head{padding:18px;border-radius:22px;} .hero-text{font-size:.98rem;} .page-wrap{width:min(100% - 16px,1280px);padding:12px 0;} .page-topbar{padding:10px 14px;border-radius:18px;margin-bottom:16px;top:10px;} .btn-3d{min-height:42px;padding:10px 12px;font-size:.9rem;} .hover-toast{bottom:calc(16px + var(--safe-bottom));padding:12px 16px;max-width:calc(100vw - 24px);} .focus-panel{padding:16px 16px calc(18px + var(--safe-bottom));max-height:60vh;} .focus-header{flex-direction:column;} .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media (max-width: 760px){.main-menu{padding:16px;} .menu-shell{padding:18px;border-radius:24px;} .hero-head{padding:18px;border-radius:22px;} .hero-text{font-size:.98rem;} .page-wrap{width:min(100% - 16px,1280px);padding:12px 0;} .page-topbar{padding:10px 14px;border-radius:18px;margin-bottom:16px;top:10px;} .btn-3d{min-height:42px;padding:10px 12px;font-size:.9rem;} .planet-select{min-width: 100%;} .hover-toast{bottom:calc(16px + var(--safe-bottom));padding:12px 16px;max-width:calc(100vw - 24px);} .focus-panel{padding:16px 16px calc(18px + var(--safe-bottom));max-height:60vh;} .focus-header{flex-direction:column;} .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
 </style>
 
 <script type="importmap">
@@ -118,9 +131,9 @@ body.solar-lock{overflow:hidden;}
 <div class="main-menu" id="mainMenu" style="display:none;">
   <div class="menu-shell glass">
     <div class="hero-head">
-      <div class="app-badge">🕹️ Идеальное управление камерой</div>
+      <div class="app-badge">📚 История и удобная навигация</div>
       <h1 class="hero-title">Космический Атлас</h1>
-      <p class="hero-text">Интерактивная энциклопедия Солнечной системы. Теперь вы можете свободно вращать и масштабировать любую планету даже на лету, а камера мгновенно реагирует на ваши касания.</p>
+      <p class="hero-text">Интерактивная энциклопедия Солнечной системы с историческими датами первых космических аппаратов и быстрым выпадающим меню для полета к любой планете.</p>
     </div>
     <div class="menu-grid">
       <div class="nav-card glass" onclick="showSection('planets')">
@@ -131,7 +144,7 @@ body.solar-lock{overflow:hidden;}
       <div class="nav-card glass" onclick="showSection('solar')">
         <div class="nav-icon">☀️</div>
         <div class="nav-title">Солнечная система 3D</div>
-        <div class="nav-desc">Свободный полет без блокировки камеры, детальные текстуры каждой планеты, их лун и массивное Солнце.</div>
+        <div class="nav-desc">Быстрое меню навигации, свободный полет и детальная статистика по каждой планете.</div>
       </div>
     </div>
   </div>
@@ -152,8 +165,11 @@ body.solar-lock{overflow:hidden;}
     <canvas id="solarCanvas"></canvas>
     <div class="solar-overlay">
       <div class="top-bar-3d">
-        <div class="top-bar-group">
-          <button class="btn-3d" onclick="goBack()">← Назад</button>
+        <div class="top-bar-group" style="flex: 1;">
+          <button class="btn-3d" style="flex: 0 0 auto;" onclick="goBack()">← Назад</button>
+          <select id="planetSelect" class="btn-3d planet-select">
+            <option value="">🚀 Свободный полет</option>
+          </select>
         </div>
         <div class="top-bar-group">
           <button class="btn-3d active" id="lightToggleBtn" onclick="toggleLighting()">💡 Осмотр</button>
@@ -162,7 +178,7 @@ body.solar-lock{overflow:hidden;}
       </div>
       <div class="hover-toast glass" id="hoverInfo">
         <b>Свободный полет</b>
-        <span>Камера разблокирована. Вращайте, масштабируйте и перемещайтесь свободно.</span>
+        <span>Свайпайте двумя пальцами для панорамирования или используйте меню сверху.</span>
       </div>
     </div>
     <div class="focus-panel" id="focusPanel">
@@ -198,26 +214,16 @@ const TEXTURE_RESOURCES = {
   neptune: PLANETS_CDN + 'neptunemap.jpg'
 };
 
+// Добавлены исторические даты открытия и первых снимков космическими аппаратами
 const PLANETS = [
-  { id:'mercury', name:'Меркурий', r:0.57, dist:70, rotSpeed:0.017, axialTilt:0.03, color: 0x888888, tagline:'Самая маленькая планета', stats:{'Диаметр':'4 879 км', 'Температура':'-173 / +427°C'}, facts:['Ближайшая к Солнцу планета.','Поверхность покрыта кратерами, как у Луны.'] },
-  { id:'venus', name:'Венера', r:1.42, dist:95, rotSpeed:-0.004, axialTilt:3.09, color: 0xe3bb76, tagline:'Самая горячая планета', stats:{'Диаметр':'12 104 км', 'Температура':'+464°C'}, facts:['Плотная атмосфера создаёт мощный парниковый эффект.','Венера вращается в обратную сторону.'] },
-  { id:'earth', name:'Земля', r:1.5, dist:125, rotSpeed:1.0, axialTilt:0.41, color: 0x2f8fca, tagline:'Голубая планета', stats:{'Диаметр':'12 742 км', 'Спутники':'1'}, facts:['Единственная планета, где подтверждена жизнь.','71% поверхности покрыто океанами.'],
-    moons: [{name:'Луна', r:0.4, dist:4.5, orbSpeed:1.8, rotSpeed:1.0, tex:'moon'}] },
-  { id:'mars', name:'Марс', r:0.79, dist:155, rotSpeed:0.97, axialTilt:0.44, color: 0xc1440e, tagline:'Красная планета', stats:{'Диаметр':'6 779 км', 'Спутники':'2'}, facts:['Красный цвет связан с оксидом железа в грунте.','На Марсе находится вулкан Олимп — самый крупный в Солнечной системе.'],
-    moons: [{name:'Фобос', r:0.15, dist:2.0, orbSpeed:2.5, rotSpeed:0, tex:'moon', color:0xaa8866}, {name:'Деймос', r:0.1, dist:3.0, orbSpeed:1.5, rotSpeed:0, tex:'moon', color:0xaa8866}] },
-  { id:'jupiter', name:'Юпитер', r:16.8, dist:240, rotSpeed:2.4, axialTilt:0.05, color: 0xd8ca9d, tagline:'Газовый гигант', stats:{'Диаметр':'139 820 км', 'Масса':'1.9×10²⁷ кг'}, facts:['Самая большая планета системы.','Большое красное пятно — гигантский шторм, который наблюдают веками.'],
-    moons: [
-      {name:'Ио', r:0.4, dist:22, orbSpeed:2.8, rotSpeed:1.0, tex:'moon', color:0xffffaa},
-      {name:'Европа', r:0.35, dist:26, orbSpeed:2.2, rotSpeed:1.0, tex:'moon', color:0xaaaaff},
-      {name:'Ганимед', r:0.6, dist:32, orbSpeed:1.8, rotSpeed:1.0, tex:'moon', color:0xcccccc},
-      {name:'Каллисто', r:0.55, dist:40, orbSpeed:1.4, rotSpeed:1.0, tex:'moon', color:0x888888}
-    ] },
-  { id:'saturn', name:'Сатурн', r:14.1, dist:350, rotSpeed:2.2, axialTilt:0.47, color: 0xead6b8, rings:true, ringInner:1.35, ringOuter:2.45, tagline:'Властелин колец', stats:{'Диаметр':'116 460 км', 'Спутники':'146'}, facts:['Известен своими яркими и широкими кольцами.','Средняя плотность Сатурна меньше плотности воды.'],
-    moons: [{name:'Титан', r:0.6, dist:42, orbSpeed:1.9, rotSpeed:1.0, tex:'moon', color:0xffaa00}, {name:'Энцелад', r:0.2, dist:38, orbSpeed:2.6, rotSpeed:1.0, tex:'moon', color:0xffffff}] },
-  { id:'uranus', name:'Уран', r:6.0, dist:460, rotSpeed:-1.4, axialTilt:1.71, color: 0xd1e7e7, rings:true, ringInner:1.55, ringOuter:2.15, tagline:'Ледяной гигант', stats:{'Температура':'-195°C', 'Спутники':'27'}, facts:['Уран вращается почти лежа на боку.','Относится к категории ледяных гигантов.'],
-    moons: [{name:'Титания', r:0.3, dist:12, orbSpeed:2.0, rotSpeed:1.0, tex:'moon', color:0xeeeeee}] },
-  { id:'neptune', name:'Нептун', r:5.8, dist:550, rotSpeed:1.5, axialTilt:0.49, color: 0x5b5ddf, tagline:'Ветреный гигант', stats:{'Температура':'-200°C', 'Спутники':'16'}, facts:['На Нептуне дуют самые сильные ветры в Солнечной системе.','Его существование сначала предсказали математически, а потом уже увидели.'],
-    moons: [{name:'Тритон', r:0.4, dist:11, orbSpeed:-2.5, rotSpeed:1.0, tex:'moon', color:0xaaffaa}] }
+  { id:'mercury', name:'Меркурий', r:0.57, dist:70, rotSpeed:0.017, axialTilt:0.03, color: 0x888888, tagline:'Самая маленькая планета', stats:{'Диаметр':'4 879 км', 'Температура':'-173 / +427°C', 'Открытие':'С древности', 'Первое фото':'1974 (Маринер-10)'}, facts:['Ближайшая к Солнцу планета.','Поверхность покрыта кратерами, как у Луны.'] },
+  { id:'venus', name:'Венера', r:1.42, dist:95, rotSpeed:-0.004, axialTilt:3.09, color: 0xe3bb76, tagline:'Самая горячая планета', stats:{'Диаметр':'12 104 км', 'Температура':'+464°C', 'Открытие':'С древности', 'Первое фото':'1974 (Маринер-10)'}, facts:['Плотная атмосфера создаёт мощный парниковый эффект.','Венера вращается в обратную сторону.'] },
+  { id:'earth', name:'Земля', r:1.5, dist:125, rotSpeed:1.0, axialTilt:0.41, color: 0x2f8fca, tagline:'Голубая планета', stats:{'Диаметр':'12 742 км', 'Спутники':'1', 'Открытие':'Наш дом', 'Первое фото':'1946 (Фау-2)'}, facts:['Единственная планета, где подтверждена жизнь.','71% поверхности покрыто океанами.'], moons: [{name:'Луна', r:0.4, dist:4.5, orbSpeed:1.8, rotSpeed:1.0, tex:'moon'}] },
+  { id:'mars', name:'Марс', r:0.79, dist:155, rotSpeed:0.97, axialTilt:0.44, color: 0xc1440e, tagline:'Красная планета', stats:{'Диаметр':'6 779 км', 'Спутники':'2', 'Открытие':'С древности', 'Первое фото':'1965 (Маринер-4)'}, facts:['Красный цвет связан с оксидом железа в грунте.','На Марсе находится вулкан Олимп — самый крупный в Солнечной системе.'], moons: [{name:'Фобос', r:0.15, dist:2.0, orbSpeed:2.5, rotSpeed:0, tex:'moon', color:0xaa8866}, {name:'Деймос', r:0.1, dist:3.0, orbSpeed:1.5, rotSpeed:0, tex:'moon', color:0xaa8866}] },
+  { id:'jupiter', name:'Юпитер', r:16.8, dist:240, rotSpeed:2.4, axialTilt:0.05, color: 0xd8ca9d, tagline:'Газовый гигант', stats:{'Диаметр':'139 820 км', 'Масса':'1.9×10²⁷ кг', 'Открытие':'С древности', 'Первое фото':'1973 (Пионер-10)'}, facts:['Самая большая планета системы.','Большое красное пятно — гигантский шторм, который наблюдают веками.'], moons: [{name:'Ио', r:0.4, dist:22, orbSpeed:2.8, rotSpeed:1.0, tex:'moon', color:0xffffaa}, {name:'Европа', r:0.35, dist:26, orbSpeed:2.2, rotSpeed:1.0, tex:'moon', color:0xaaaaff}, {name:'Ганимед', r:0.6, dist:32, orbSpeed:1.8, rotSpeed:1.0, tex:'moon', color:0xcccccc}, {name:'Каллисто', r:0.55, dist:40, orbSpeed:1.4, rotSpeed:1.0, tex:'moon', color:0x888888}] },
+  { id:'saturn', name:'Сатурн', r:14.1, dist:350, rotSpeed:2.2, axialTilt:0.47, color: 0xead6b8, rings:true, ringInner:1.35, ringOuter:2.45, tagline:'Властелин колец', stats:{'Диаметр':'116 460 км', 'Спутники':'146', 'Открытие':'С древности', 'Первое фото':'1979 (Пионер-11)'}, facts:['Известен своими яркими и широкими кольцами.','Средняя плотность Сатурна меньше плотности воды.'], moons: [{name:'Титан', r:0.6, dist:42, orbSpeed:1.9, rotSpeed:1.0, tex:'moon', color:0xffaa00}, {name:'Энцелад', r:0.2, dist:38, orbSpeed:2.6, rotSpeed:1.0, tex:'moon', color:0xffffff}] },
+  { id:'uranus', name:'Уран', r:6.0, dist:460, rotSpeed:-1.4, axialTilt:1.71, color: 0xd1e7e7, rings:true, ringInner:1.55, ringOuter:2.15, tagline:'Ледяной гигант', stats:{'Температура':'-195°C', 'Спутники':'27', 'Открытие':'1781 (У. Гершель)', 'Первое фото':'1986 (Вояджер-2)'}, facts:['Уран вращается почти лежа на боку.','Относится к категории ледяных гигантов.'], moons: [{name:'Титания', r:0.3, dist:12, orbSpeed:2.0, rotSpeed:1.0, tex:'moon', color:0xeeeeee}] },
+  { id:'neptune', name:'Нептун', r:5.8, dist:550, rotSpeed:1.5, axialTilt:0.49, color: 0x5b5ddf, tagline:'Ветреный гигант', stats:{'Температура':'-200°C', 'Спутники':'16', 'Открытие':'1846 (Леверье)', 'Первое фото':'1989 (Вояджер-2)'}, facts:['На Нептуне дуют самые сильные ветры в Солнечной системе.','Его существование сначала предсказали математически, а потом уже увидели.'], moons: [{name:'Тритон', r:0.4, dist:11, orbSpeed:-2.5, rotSpeed:1.0, tex:'moon', color:0xaaffaa}] }
 ];
 
 const isTouchDevice = window.matchMedia('(pointer:coarse)').matches || window.innerWidth <= 1024;
@@ -232,6 +238,25 @@ for(let i=0; i<90; i++){
 const overlay = document.getElementById('textureOverlay');
 const overlayDetail = document.getElementById('overlayDetail');
 const mainMenu = document.getElementById('mainMenu');
+
+// Инициализация выпадающего списка
+const planetSelect = document.getElementById('planetSelect');
+PLANETS.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = '🪐 ' + p.name;
+    planetSelect.appendChild(opt);
+});
+
+// Слушатель выбора из списка
+planetSelect.addEventListener('change', (e) => {
+    if(!e.target.value) {
+        unfocusPlanet();
+        return;
+    }
+    const targetMesh = planetMeshes.find(m => m.userData.data.id === e.target.value);
+    if(targetMesh) focusOnPlanet(targetMesh);
+});
 
 window.showSection = (id) => {
   document.getElementById('mainMenu').style.display = 'none';
@@ -445,7 +470,6 @@ function initThreeJS(){
   controls.maxDistance = 3500;
   controls.target.copy(defaultTarget);
 
-  // СИСТЕМА ПРЕРЫВАНИЯ АНИМАЦИИ: Как только пользователь касается экрана, отменяем все скриптовые перелеты
   controls.addEventListener('start', () => {
       isReturningToOrbit = false;
       isCameraTransitioning = false;
@@ -592,6 +616,9 @@ window.focusOnPlanet = (mesh) => {
   isCameraTransitioning = true;
 
   const p = mesh.userData.data;
+  
+  // Обновление UI
+  document.getElementById('planetSelect').value = p.id;
   document.getElementById('fpName').textContent = p.name;
   document.getElementById('fpTag').textContent = p.tagline;
   document.getElementById('fpStats').innerHTML = Object.entries(p.stats).map(([k,v]) => `<div class="stat-box"><div class="stat-val">${v}</div><div class="stat-lbl">${k}</div></div>`).join('');
@@ -608,6 +635,8 @@ window.unfocusPlanet = () => {
   focusedMesh = null;
   isReturningToOrbit = true;
   isCameraTransitioning = false;
+  
+  document.getElementById('planetSelect').value = "";
   controls.minDistance = 16;
   controls.maxDistance = 3500;
   document.getElementById('focusPanel').classList.remove('active');
@@ -659,13 +688,11 @@ function animate(){
             controls.target.copy(currentPlanetPos);
         }
     } else {
-        // ИДЕАЛЬНЫЙ ТРЕКИНГ: Применяем только разницу позиций. OrbitControls не блокируется!
         const deltaMove = currentPlanetPos.clone().sub(controls.target);
         camera.position.add(deltaMove);
         controls.target.copy(currentPlanetPos);
     }
   } else if (isReturningToOrbit) {
-    // Если происходит возврат, но пользователь коснулся экрана - эта часть кода просто перестает работать благодаря controls.addEventListener
     controls.target.lerp(defaultTarget, 0.08);
     camera.position.lerp(defaultCameraPos, 0.04);
     if (camera.position.distanceTo(defaultCameraPos) < 10) { 
