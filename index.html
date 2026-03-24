@@ -118,9 +118,9 @@ body.solar-lock{overflow:hidden;}
 <div class="main-menu" id="mainMenu" style="display:none;">
   <div class="menu-shell glass">
     <div class="hero-head">
-      <div class="app-badge">📏 Реалистичный масштаб и рандомный старт</div>
+      <div class="app-badge">🕹️ Идеальное управление камерой</div>
       <h1 class="hero-title">Космический Атлас</h1>
-      <p class="hero-text">Интерактивная энциклопедия Солнечной системы. Планеты теперь имеют математически точные относительные размеры, а Солнце выглядит действительно доминирующей звездой.</p>
+      <p class="hero-text">Интерактивная энциклопедия Солнечной системы. Теперь вы можете свободно вращать и масштабировать любую планету даже на лету, а камера мгновенно реагирует на ваши касания.</p>
     </div>
     <div class="menu-grid">
       <div class="nav-card glass" onclick="showSection('planets')">
@@ -131,7 +131,7 @@ body.solar-lock{overflow:hidden;}
       <div class="nav-card glass" onclick="showSection('solar')">
         <div class="nav-icon">☀️</div>
         <div class="nav-title">Солнечная система 3D</div>
-        <div class="nav-desc">Свободный полет, детальные текстуры каждой планеты, их лун и реалистичное Солнце.</div>
+        <div class="nav-desc">Свободный полет без блокировки камеры, детальные текстуры каждой планеты, их лун и массивное Солнце.</div>
       </div>
     </div>
   </div>
@@ -162,7 +162,7 @@ body.solar-lock{overflow:hidden;}
       </div>
       <div class="hover-toast glass" id="hoverInfo">
         <b>Свободный полет</b>
-        <span>Свайпайте двумя пальцами для панорамирования. Коснитесь планеты для фокусировки.</span>
+        <span>Камера разблокирована. Вращайте, масштабируйте и перемещайтесь свободно.</span>
       </div>
     </div>
     <div class="focus-panel" id="focusPanel">
@@ -198,9 +198,6 @@ const TEXTURE_RESOURCES = {
   neptune: PLANETS_CDN + 'neptunemap.jpg'
 };
 
-// Физически точные пропорции (Земля = 1.5). 
-// Юпитер в 11.2 раза больше Земли (16.8), Меркурий = 0.38 (0.57) и т.д.
-// Дистанции раздвинуты, чтобы гигантское Солнце (r=45) их не поглотило.
 const PLANETS = [
   { id:'mercury', name:'Меркурий', r:0.57, dist:70, rotSpeed:0.017, axialTilt:0.03, color: 0x888888, tagline:'Самая маленькая планета', stats:{'Диаметр':'4 879 км', 'Температура':'-173 / +427°C'}, facts:['Ближайшая к Солнцу планета.','Поверхность покрыта кратерами, как у Луны.'] },
   { id:'venus', name:'Венера', r:1.42, dist:95, rotSpeed:-0.004, axialTilt:3.09, color: 0xe3bb76, tagline:'Самая горячая планета', stats:{'Диаметр':'12 104 км', 'Температура':'+464°C'}, facts:['Плотная атмосфера создаёт мощный парниковый эффект.','Венера вращается в обратную сторону.'] },
@@ -371,7 +368,6 @@ function buildSun(){
   sunMesh = new THREE.Group();
   const sunTex = loadedTextures.get(TEXTURE_RESOURCES.sun);
   
-  // Солнце теперь массивное (радиус 45)
   const coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
   if (sunTex) { coreMat.map = sunTex; } else { coreMat.color.setHex(0xffaa00); }
   const coreSphere = new THREE.Mesh(new THREE.SphereGeometry(45, 64, 64), coreMat);
@@ -394,7 +390,7 @@ function buildSun(){
       depthWrite: false 
   });
   const spriteGlow = new THREE.Sprite(spriteMat);
-  spriteGlow.scale.set(280, 280, 1); // Масштаб свечения под новый размер
+  spriteGlow.scale.set(280, 280, 1); 
   sunMesh.add(spriteGlow);
 
   return sunMesh;
@@ -449,6 +445,12 @@ function initThreeJS(){
   controls.maxDistance = 3500;
   controls.target.copy(defaultTarget);
 
+  // СИСТЕМА ПРЕРЫВАНИЯ АНИМАЦИИ: Как только пользователь касается экрана, отменяем все скриптовые перелеты
+  controls.addEventListener('start', () => {
+      isReturningToOrbit = false;
+      isCameraTransitioning = false;
+  });
+
   ambientLight = new THREE.AmbientLight(0xffffff, 2.5);
   scene.add(ambientLight);
 
@@ -468,7 +470,6 @@ function initThreeJS(){
     planet.orbitSpeed = 80 / Math.sqrt(planet.dist);
 
     const orbitGroup = new THREE.Group();
-    // РАНДОМНАЯ СТАРТОВАЯ ПОЗИЦИЯ ПЛАНЕТЫ ПО ОРБИТЕ
     orbitGroup.rotation.y = Math.random() * Math.PI * 2;
     scene.add(orbitGroup);
 
@@ -487,7 +488,6 @@ function initThreeJS(){
     if (planet.moons) {
         planet.moons.forEach(moonData => {
             const moonOrbitGroup = new THREE.Group();
-            // РАНДОМНАЯ СТАРТОВАЯ ПОЗИЦИЯ СПУТНИКА
             moonOrbitGroup.rotation.y = Math.random() * Math.PI * 2;
             anchor.add(moonOrbitGroup);
 
@@ -644,25 +644,33 @@ function animate(){
     focusedMesh.getWorldPosition(currentPlanetPos);
     
     if (isCameraTransitioning) {
-        focusDesiredTarget.lerp(currentPlanetPos, 0.2);
+        focusDesiredTarget.lerp(currentPlanetPos, 0.15);
         const dir = focusDesiredCameraPos.clone().sub(focusDesiredTarget).normalize();
         const p = focusedMesh.userData.data;
         const boundingRadius = p.rings ? p.r * 3.5 : (p.moons ? p.r * 3.0 : p.r * 1.5);
         const desiredDistance = clamp(boundingRadius * (isTouchDevice ? 4.5 : 4.0), 40, 180);
         focusDesiredCameraPos.copy(focusDesiredTarget).add(dir.multiplyScalar(desiredDistance)).add(new THREE.Vector3(0, p.r * 0.5, 0));
+        
         camera.position.lerp(focusDesiredCameraPos, 0.07);
         controls.target.lerp(focusDesiredTarget, 0.12);
-        if (camera.position.distanceTo(focusDesiredCameraPos) < 2.0) { isCameraTransitioning = false; }
+        
+        if (camera.position.distanceTo(focusDesiredCameraPos) < 2.0) { 
+            isCameraTransitioning = false; 
+            controls.target.copy(currentPlanetPos);
+        }
     } else {
-        const planetDelta = currentPlanetPos.clone().sub(focusDesiredTarget);
-        camera.position.add(planetDelta);
+        // ИДЕАЛЬНЫЙ ТРЕКИНГ: Применяем только разницу позиций. OrbitControls не блокируется!
+        const deltaMove = currentPlanetPos.clone().sub(controls.target);
+        camera.position.add(deltaMove);
         controls.target.copy(currentPlanetPos);
-        focusDesiredTarget.copy(currentPlanetPos);
     }
   } else if (isReturningToOrbit) {
+    // Если происходит возврат, но пользователь коснулся экрана - эта часть кода просто перестает работать благодаря controls.addEventListener
     controls.target.lerp(defaultTarget, 0.08);
     camera.position.lerp(defaultCameraPos, 0.04);
-    if (camera.position.distanceTo(defaultCameraPos) < 5) isReturningToOrbit = false;
+    if (camera.position.distanceTo(defaultCameraPos) < 10) { 
+        isReturningToOrbit = false; 
+    }
   }
 
   controls.update();
