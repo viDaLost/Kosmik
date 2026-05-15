@@ -157,6 +157,7 @@ input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:99px;b
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;margin-top:-9px;border-radius:50%;background:#fff;border:4px solid var(--cyan);box-shadow:0 0 20px rgba(120,239,255,.55);}
 .toggle-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .toggle-grid .btn{min-height:42px;border-radius:14px;padding:9px 10px;font-size:.84rem;}
+.glow-grid .btn{font-size:.8rem;}
 .quality-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .select-mini{min-height:42px;border-radius:14px;padding:0 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.11);font-weight:800;}
 .hud-panel{position:absolute;left:50%;bottom:calc(16px + var(--safe-bottom));transform:translateX(-50%);width:min(520px,calc(100vw - 28px));border-radius:24px;padding:13px 16px;text-align:center;opacity:1;transition:opacity .25s ease,transform .25s ease;}
@@ -343,6 +344,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;heigh
             <input id="exposureSlider" type="range" min="0.55" max="1.8" value="1.05" step="0.05" />
           </div>
           <div class="setting">
+            <label>Режим свечения</label>
+            <div class="toggle-grid glow-grid">
+              <button class="btn active" id="glowRealBtn">☀️ Реальный</button>
+              <button class="btn" id="glowInspectBtn">🔎 Для осмотра</button>
+            </div>
+          </div>
+          <div class="setting">
             <label>Качество рендера</label>
             <div class="quality-row">
               <select id="qualitySelect" class="select-mini">
@@ -519,7 +527,7 @@ const state = {
   initialized:false,
   activeView:'menu',
   isTouch: matchMedia('(pointer:coarse)').matches || innerWidth < 1024,
-  settings:{speed:1,bloom:1,exposure:1.05,quality:'auto',labels:true,orbits:true,asteroids:true,dust:true,trails:true,scale:'visual',mode:'overview'},
+  settings:{speed:1,bloom:1,exposure:1.05,quality:'auto',labels:true,orbits:true,asteroids:true,dust:true,trails:true,scale:'visual',mode:'overview',glowMode:'real'},
   paused:false,
   cinematic:false,
   following:true,
@@ -532,7 +540,7 @@ const state = {
 
 let scene, camera, renderer, composer, bloomPass, controls, clock;
 let raycaster, pointer;
-let ambientLight, sunLight, fillLight;
+let ambientLight, sunLight, fillLight, inspectionLight;
 let sunGroup, deepSpaceSphere, starsMaterial, dustMaterial, asteroidBelt, kuiperBelt, cometTail;
 let cinematicPhase = 0;
 const textures = new Map();
@@ -755,6 +763,8 @@ function initUI(){
     $('#exposureValue').textContent = state.settings.exposure.toFixed(2);
     if(renderer) renderer.toneMappingExposure = state.settings.exposure;
   });
+  $('#glowRealBtn').addEventListener('click', () => applyGlowMode('real'));
+  $('#glowInspectBtn').addEventListener('click', () => applyGlowMode('inspection'));
   $('#qualitySelect').addEventListener('change', e => {
     state.settings.quality = e.target.value;
     resizeRenderer();
@@ -776,7 +786,7 @@ function toggleSetting(key){
   if(btn) btn.classList.toggle('active', state.settings[key]);
   if(key === 'orbits') registry.forEach(item => { if(item.orbitLine) item.orbitLine.visible = state.settings.orbits; if(item.cometLine) item.cometLine.visible = state.settings.orbits; });
   if(key === 'asteroids'){ if(asteroidBelt) asteroidBelt.visible = state.settings.asteroids; if(kuiperBelt) kuiperBelt.visible = state.settings.asteroids; }
-  if(key === 'dust' && dustMaterial) dustMaterial.opacity = state.settings.dust ? .62 : 0;
+  if(key === 'dust' && dustMaterial) dustMaterial.opacity = state.settings.dust ? getGlowPreset(state.settings.glowMode).dustOpacity : 0;
   if(key === 'trails') registry.forEach(item => { if(item.trail) item.trail.visible = state.settings.trails; });
   showToast(`${key}: ${state.settings[key] ? 'включено' : 'выключено'}`);
 }
@@ -804,27 +814,61 @@ function toggleScaleMode(){
   updateScaleMode();
   showToast(state.settings.scale === 'science' ? 'Более строгие расстояния и размеры' : 'Кинематографичный читаемый масштаб');
 }
+function getModePreset(mode){
+  const map = {
+    overview:{bloom:1, exposure:1.05, ambient:.42, fill:.22, sun:4.2},
+    cinema:{bloom:1.75, exposure:1.22, ambient:.25, fill:.16, sun:4.7},
+    science:{bloom:.55, exposure:.94, ambient:.55, fill:.36, sun:3.9},
+    night:{bloom:1.25, exposure:.78, ambient:.08, fill:.08, sun:3.8}
+  };
+  return map[mode] || map.overview;
+}
+function getGlowPreset(glowMode){
+  const map = {
+    real:{label:'Реальный', bloomMul:1, exposureAdd:0, ambientMul:1, fillMul:1, sunMul:1, inspection:0, dustOpacity:.35},
+    inspection:{label:'Для осмотра', bloomMul:.72, exposureAdd:.12, ambientMul:1.9, fillMul:2.25, sunMul:.86, inspection:1.18, dustOpacity:.18}
+  };
+  return map[glowMode] || map.real;
+}
+function syncVisualPreset(announceMode=false, announceGlow=false){
+  const base = getModePreset(state.settings.mode);
+  const glow = getGlowPreset(state.settings.glowMode);
+  const bloom = clamp(base.bloom * glow.bloomMul, 0, 2.6);
+  const exposure = clamp(base.exposure + glow.exposureAdd, 0.55, 1.8);
+  const ambient = base.ambient * glow.ambientMul;
+  const fill = base.fill * glow.fillMul;
+  state.settings.bloom = bloom;
+  state.settings.exposure = exposure;
+  $('#bloomSlider').value = bloom;
+  $('#exposureSlider').value = exposure;
+  $('#bloomValue').textContent = bloom.toFixed(2);
+  $('#exposureValue').textContent = exposure.toFixed(2);
+  if(bloomPass) bloomPass.strength = bloom;
+  if(renderer) renderer.toneMappingExposure = exposure;
+  if(ambientLight) ambientLight.intensity = ambient;
+  if(fillLight) fillLight.intensity = fill;
+  if(sunLight) sunLight.intensity = base.sun * glow.sunMul;
+  if(inspectionLight) inspectionLight.intensity = glow.inspection;
+  if(dustMaterial) dustMaterial.opacity = state.settings.dust ? glow.dustOpacity : 0;
+  if(sunGroup?.userData?.glowSprites){
+    const [core, mid, outer] = sunGroup.userData.glowSprites;
+    core.material.opacity = state.settings.glowMode === 'inspection' ? .44 : .58;
+    mid.material.opacity = state.settings.glowMode === 'inspection' ? .16 : .24;
+    outer.material.opacity = state.settings.glowMode === 'inspection' ? .05 : .10;
+  }
+  $('#glowRealBtn')?.classList.toggle('active', state.settings.glowMode === 'real');
+  $('#glowInspectBtn')?.classList.toggle('active', state.settings.glowMode === 'inspection');
+  if(announceMode) showToast(`Режим: ${$('.mode-btn.active b')?.textContent || state.settings.mode}`);
+  if(announceGlow) showToast(`Свечение: ${glow.label}`);
+}
 function applyMode(mode){
   state.settings.mode = mode;
   $$('.mode-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.mode === mode));
-  const map = {
-    overview:{bloom:1, exposure:1.05, ambient:.42, fill:.22},
-    cinema:{bloom:1.75, exposure:1.22, ambient:.25, fill:.16},
-    science:{bloom:.55, exposure:.94, ambient:.55, fill:.36},
-    night:{bloom:1.25, exposure:.78, ambient:.08, fill:.08}
-  };
-  const m = map[mode] || map.overview;
-  state.settings.bloom = m.bloom;
-  state.settings.exposure = m.exposure;
-  $('#bloomSlider').value = m.bloom;
-  $('#exposureSlider').value = m.exposure;
-  $('#bloomValue').textContent = m.bloom.toFixed(2);
-  $('#exposureValue').textContent = m.exposure.toFixed(2);
-  if(bloomPass) bloomPass.strength = m.bloom;
-  if(renderer) renderer.toneMappingExposure = m.exposure;
-  if(ambientLight) ambientLight.intensity = m.ambient;
-  if(fillLight) fillLight.intensity = m.fill;
-  showToast(`Режим: ${$('.mode-btn.active b')?.textContent || mode}`);
+  syncVisualPreset(true, false);
+}
+function applyGlowMode(glowMode){
+  state.settings.glowMode = glowMode;
+  syncVisualPreset(false, true);
 }
 function toggleFullscreen(){
   const root = document.documentElement;
@@ -859,7 +903,7 @@ function initThree(){
   return new Promise(resolve => {
     const canvas = $('#solarCanvas');
     scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x02030b, 0.00022);
+    scene.fog = new THREE.FogExp2(0x000000, 0.00016);
     camera = new THREE.PerspectiveCamera(48, innerWidth / innerHeight, .08, 9000);
     camera.position.set(0, 148, 360);
     clock = new THREE.Clock();
@@ -897,10 +941,13 @@ function initThree(){
       $('#followBtn').classList.remove('active');
     });
 
-    ambientLight = new THREE.AmbientLight(0x89a8ff, .42);
-    fillLight = new THREE.HemisphereLight(0x8faaff, 0x150b0a, .22);
+    ambientLight = new THREE.AmbientLight(0xf0f5ff, .42);
+    fillLight = new THREE.HemisphereLight(0xd9e5ff, 0x020202, .22);
     sunLight = new THREE.PointLight(0xffe1a7, 4.2, 0, 1.15);
-    scene.add(ambientLight, fillLight, sunLight);
+    inspectionLight = new THREE.DirectionalLight(0xe8f3ff, 0);
+    inspectionLight.position.set(120, 90, 160);
+    inspectionLight.target.position.set(0,0,0);
+    scene.add(ambientLight, fillLight, sunLight, inspectionLight, inspectionLight.target);
 
     setLoader(66, 'Создание окружения…');
     buildEnvironment();
@@ -911,6 +958,7 @@ function initThree(){
     setLoader(88, 'Создание кометы и поясов…');
     buildComet(getObject('halley'));
     buildAsteroidBelts();
+    syncVisualPreset(false, false);
     setLoader(94, 'Подключение управления…');
     bindCanvasInput();
     addEventListener('resize', resizeRenderer);
@@ -938,14 +986,14 @@ function buildEnvironment(){
         vec3 p=normalize(vPos);
         float n=noise(p*4.5 + vec3(uTime*.01,0.0,0.0));
         float n2=noise(p*9.0 - vec3(0.0,uTime*.006,0.0));
-        float neb=smoothstep(.48,.95,n*.75+n2*.35);
-        vec3 c1=vec3(.01,.018,.05);
-        vec3 c2=vec3(.05,.13,.26);
-        vec3 c3=vec3(.23,.11,.35);
-        vec3 color=mix(c1,c2,neb*.72);
-        color=mix(color,c3,smoothstep(.72,1.0,n2)*.28);
-        float horizon=pow(abs(p.y),.35);
-        color += vec3(.02,.035,.07)*(1.0-horizon);
+        float neb=smoothstep(.58,.96,n*.68+n2*.24);
+        vec3 c1=vec3(.0,.0,.0);
+        vec3 c2=vec3(.006,.009,.018);
+        vec3 c3=vec3(.025,.015,.04);
+        vec3 color=mix(c1,c2,neb*.55);
+        color=mix(color,c3,smoothstep(.82,1.0,n2)*.16);
+        float vignette=pow(1.0-abs(p.y)*.78,1.5);
+        color *= (.85 + vignette*.15);
         gl_FragColor=vec4(color,1.0);
       }`
   });
@@ -964,7 +1012,7 @@ function buildEnvironment(){
     positions[i*3] = radius * Math.sin(phi) * Math.cos(theta);
     positions[i*3+1] = radius * Math.cos(phi);
     positions[i*3+2] = radius * Math.sin(phi) * Math.sin(theta);
-    const color = new THREE.Color().setHSL(.56 + Math.random()*.16, .35 + Math.random()*.35, .74 + Math.random()*.25);
+    const color = new THREE.Color().setHSL(.58 + Math.random()*.06, .10 + Math.random()*.18, .76 + Math.random()*.22);
     colors[i*3] = color.r; colors[i*3+1] = color.g; colors[i*3+2] = color.b;
     phases[i] = Math.random() * Math.PI * 2;
   }
@@ -991,7 +1039,7 @@ function buildEnvironment(){
     dustPos[i*3+2] = Math.sin(a) * r;
   }
   dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos,3));
-  dustMaterial = new THREE.PointsMaterial({size:1.5,color:0x8edcff,transparent:true,opacity:.62,depthWrite:false,blending:THREE.AdditiveBlending,sizeAttenuation:true});
+  dustMaterial = new THREE.PointsMaterial({size:1.5,color:0xf1f6ff,transparent:true,opacity:.35,depthWrite:false,blending:THREE.AdditiveBlending,sizeAttenuation:true});
   scene.add(new THREE.Points(dustGeo,dustMaterial));
 }
 
@@ -1004,11 +1052,14 @@ function buildSun(){
   sunGroup.add(sun);
 
   const glowTexture = createGlowTexture('rgba(255,246,203,1)','rgba(255,117,28,0)');
+  const glowSprites = [];
   [150,265,430].forEach((size, idx) => {
     const sprite = new THREE.Sprite(new THREE.SpriteMaterial({map:glowTexture,transparent:true,opacity:[.58,.24,.1][idx],blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false,color:[0xffd59a,0xff934e,0x78efff][idx]}));
     sprite.scale.setScalar(size);
     sunGroup.add(sprite);
+    glowSprites.push(sprite);
   });
+  sunGroup.userData.glowSprites = glowSprites;
 
   const corona = new THREE.Mesh(new THREE.SphereGeometry(data.radius*1.12,96,96), atmosphereMaterial([255,168,71],1.35,.95));
   sunGroup.add(corona);
@@ -1362,6 +1413,11 @@ function animate(){
 
   if(deepSpaceSphere) deepSpaceSphere.material.uniforms.uTime.value = elapsed;
   if(starsMaterial){ starsMaterial.uniforms.uTime.value = elapsed; starsMaterial.uniforms.uPixelRatio.value = qualityPixelRatio(); }
+  if(inspectionLight){
+    inspectionLight.position.copy(camera.position).add(new THREE.Vector3(18, 12, 10));
+    inspectionLight.target.position.copy(controls.target);
+    inspectionLight.target.updateMatrixWorld();
+  }
   if(dustMaterial) dustMaterial.size = 1.3 + Math.sin(elapsed*.35)*.18;
   if(sunGroup){
     sunGroup.children[0].rotation.y += delta * .035 * Math.sign(timeScale || 1);
