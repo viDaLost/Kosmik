@@ -133,10 +133,19 @@ select,input{border:0;outline:0;}
 #solarCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab;}
 #solarCanvas:active{cursor:grabbing;}
 #labelLayer{position:absolute;inset:0;z-index:8;pointer-events:none;overflow:hidden;}
-.space-label{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:999px;background:rgba(5,8,20,.54);border:1px solid rgba(176,223,255,.18);color:#dff8ff;font-weight:800;font-size:.78rem;text-shadow:0 1px 3px rgba(0,0,0,.6);box-shadow:0 8px 22px rgba(0,0,0,.28);backdrop-filter:blur(12px);opacity:.92;transition:opacity .16s ease,transform .16s ease,border-color .16s ease;}
-.space-label .icon{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;flex:0 0 16px;}
+.space-label{--accent:#78efff;--depth-scale:1;--label-y:-24px;position:absolute;transform:translate(-50%,-100%) translateY(var(--label-y)) scale(var(--depth-scale));transform-origin:50% 100%;display:grid;grid-template-columns:30px minmax(0,auto);align-items:center;gap:9px;min-width:118px;max-width:min(230px,46vw);padding:8px 11px 8px 8px;border-radius:18px;background:linear-gradient(135deg,rgba(10,16,34,.78),rgba(5,8,18,.54));border:1px solid color-mix(in srgb,var(--accent) 42%,rgba(255,255,255,.14));color:#f3fbff;font-weight:900;font-size:.78rem;text-shadow:0 1px 3px rgba(0,0,0,.72);box-shadow:0 14px 32px rgba(0,0,0,.34),0 0 24px color-mix(in srgb,var(--accent) 16%,transparent),inset 0 1px 0 rgba(255,255,255,.09);backdrop-filter:blur(16px) saturate(1.35);-webkit-backdrop-filter:blur(16px) saturate(1.35);opacity:.94;transition:opacity .16s ease,transform .18s ease,border-color .18s ease,filter .18s ease;}
+.space-label::before{content:"";position:absolute;left:22px;bottom:-23px;width:1px;height:23px;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 78%,transparent),transparent);opacity:.82;}
+.space-label::after{content:"";position:absolute;left:18px;bottom:-27px;width:9px;height:9px;border-radius:999px;background:var(--accent);box-shadow:0 0 18px var(--accent),0 0 0 5px color-mix(in srgb,var(--accent) 13%,transparent);}
+.space-label .icon{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:12px;background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.18),rgba(255,255,255,.04) 60%,rgba(255,255,255,.01));border:1px solid rgba(255,255,255,.11);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 0 18px color-mix(in srgb,var(--accent) 18%,transparent);overflow:hidden;}
+.space-label .icon .planet-icon-inline{width:24px!important;height:24px!important;margin:0;}
 .space-label .icon svg{width:100%;height:100%;display:block;filter:drop-shadow(0 0 10px rgba(255,255,255,.14));}
-.space-label.focused{border-color:rgba(120,239,255,.68);transform:translate(-50%,-50%) scale(1.08);}
+.space-label .copy{display:grid;gap:1px;min-width:0;}
+.space-label .name{font-family:'Orbitron',sans-serif;font-size:.76rem;letter-spacing:.01em;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.space-label .meta{font-size:.58rem;line-height:1;text-transform:uppercase;letter-spacing:.12em;color:#aebddb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.space-label .rail{position:absolute;left:9px;right:9px;bottom:4px;height:2px;border-radius:999px;background:linear-gradient(90deg,var(--accent),transparent);opacity:.55;}
+.space-label.focused{border-color:color-mix(in srgb,var(--accent) 72%,#fff);filter:drop-shadow(0 0 16px color-mix(in srgb,var(--accent) 35%,transparent));}
+.space-label.distant{filter:saturate(.85);}
+.space-label.near{filter:saturate(1.1);}
 .solar-ui{position:absolute;inset:0;z-index:12;pointer-events:none;padding:calc(12px + var(--safe-top)) calc(12px + var(--safe-right)) calc(12px + var(--safe-bottom)) calc(12px + var(--safe-left));}
 .solar-ui>*{pointer-events:auto;}
 .command-bar{position:absolute;top:calc(12px + var(--safe-top));left:calc(12px + var(--safe-left));right:calc(12px + var(--safe-right));display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
@@ -162,7 +171,6 @@ input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:99px;b
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;margin-top:-9px;border-radius:50%;background:#fff;border:4px solid var(--cyan);box-shadow:0 0 20px rgba(120,239,255,.55);}
 .toggle-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .toggle-grid .btn{min-height:42px;border-radius:14px;padding:9px 10px;font-size:.84rem;}
-.glow-grid .btn{font-size:.8rem;}
 .quality-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .select-mini{min-height:42px;border-radius:14px;padding:0 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.11);font-weight:800;}
 .hud-panel{position:absolute;left:50%;bottom:calc(16px + var(--safe-bottom));transform:translateX(-50%);width:min(520px,calc(100vw - 28px));border-radius:24px;padding:13px 16px;text-align:center;opacity:1;transition:opacity .25s ease,transform .25s ease;}
@@ -173,7 +181,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;heigh
 .object-panel.active{transform:translate(-50%,0);}
 .panel-grid{display:grid;grid-template-columns:minmax(0,.9fr) minmax(280px,1.1fr);gap:18px;align-items:start;}
 .object-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:12px;}
-.object-name{font-family:'Orbitron',sans-serif;font-size:clamp(1.65rem,5vw,2.45rem);letter-spacing:-.05em;line-height:1.04;}
+.object-name{font-family:'Orbitron',sans-serif;font-size:clamp(1.65rem,5vw,2.45rem);letter-spacing:-.05em;line-height:1.04;display:flex;align-items:center;gap:10px;}
+.object-name .planet-icon-inline{width:.88em!important;height:.88em!important;margin-right:0;flex:0 0 auto;}
 .object-tag{color:var(--cyan);font-weight:800;margin-top:4px;}
 .object-desc{color:#c2d1ec;line-height:1.62;margin:12px 0 16px;}
 .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;}
@@ -218,7 +227,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;heigh
   .panel-grid{grid-template-columns:1fr;}
   .stats{grid-template-columns:repeat(2,minmax(0,1fr));}
   .audio-float{right:14px;bottom:calc(86px + var(--safe-bottom));width:50px;height:50px;}
-  .space-label{font-size:.7rem;padding:6px 8px;}
+  .space-label{min-width:104px;max-width:180px;padding:7px 9px 7px 7px;gap:7px;}
+  .space-label .meta{display:none;}
+  .space-label .name{font-size:.68rem;}
+  .space-label .icon{width:26px;height:26px;border-radius:10px;}
+  .space-label .icon .planet-icon-inline{width:21px!important;height:21px!important;}
 }
 @media (max-width: 420px){
   .command-left,.command-right{grid-template-columns:1fr 1fr;}
@@ -347,13 +360,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;heigh
           <div class="setting">
             <label>Экспозиция <output id="exposureValue">1.05</output></label>
             <input id="exposureSlider" type="range" min="0.55" max="1.8" value="1.05" step="0.05" />
-          </div>
-          <div class="setting">
-            <label>Режим свечения</label>
-            <div class="toggle-grid glow-grid">
-              <button class="btn active" id="glowRealBtn">☀️ Реальный</button>
-              <button class="btn" id="glowInspectBtn">🔎 Для осмотра</button>
-            </div>
           </div>
           <div class="setting">
             <label>Качество рендера</label>
@@ -532,7 +538,7 @@ const state = {
   initialized:false,
   activeView:'menu',
   isTouch: matchMedia('(pointer:coarse)').matches || innerWidth < 1024,
-  settings:{speed:1,bloom:1,exposure:1.05,quality:'auto',labels:true,orbits:true,asteroids:true,dust:true,trails:true,scale:'visual',mode:'overview',glowMode:'real'},
+  settings:{speed:1,bloom:1,exposure:1.05,quality:'auto',labels:true,orbits:true,asteroids:true,dust:true,trails:true,scale:'visual',mode:'overview'},
   paused:false,
   cinematic:false,
   following:true,
@@ -545,7 +551,7 @@ const state = {
 
 let scene, camera, renderer, composer, bloomPass, controls, clock;
 let raycaster, pointer;
-let ambientLight, sunLight, fillLight, inspectionLight;
+let ambientLight, sunLight, fillLight;
 let sunGroup, deepSpaceSphere, starsMaterial, dustMaterial, asteroidBelt, kuiperBelt, cometTail;
 let cinematicPhase = 0;
 const textures = new Map();
@@ -638,6 +644,7 @@ function planetIconInline(id, size = 18, className = ''){
   return markup.replace('planet-icon-badge', 'planet-icon-inline');
 }
 
+
 function makeNoiseTexture(colors, size = 384, bands = false){
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = size;
@@ -669,7 +676,7 @@ function makeNoiseTexture(colors, size = 384, bands = false){
   return texture;
 }
 
-function createGlowTexture(inner = '#ffffff', outer = 'rgba(120,239,255,0)', mid = 'rgba(120,239,255,.22)'){
+function createGlowTexture(inner = '#ffffff', outer = 'rgba(255,161,43,0)', mid = 'rgba(255,207,105,.22)'){
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = 256;
   const ctx = canvas.getContext('2d');
@@ -816,8 +823,6 @@ function initUI(){
     $('#exposureValue').textContent = state.settings.exposure.toFixed(2);
     if(renderer) renderer.toneMappingExposure = state.settings.exposure;
   });
-  $('#glowRealBtn').addEventListener('click', () => applyGlowMode('real'));
-  $('#glowInspectBtn').addEventListener('click', () => applyGlowMode('inspection'));
   $('#qualitySelect').addEventListener('change', e => {
     state.settings.quality = e.target.value;
     resizeRenderer();
@@ -839,7 +844,7 @@ function toggleSetting(key){
   if(btn) btn.classList.toggle('active', state.settings[key]);
   if(key === 'orbits') registry.forEach(item => { if(item.orbitLine) item.orbitLine.visible = state.settings.orbits; if(item.cometLine) item.cometLine.visible = state.settings.orbits; });
   if(key === 'asteroids'){ if(asteroidBelt) asteroidBelt.visible = state.settings.asteroids; if(kuiperBelt) kuiperBelt.visible = state.settings.asteroids; }
-  if(key === 'dust' && dustMaterial) dustMaterial.opacity = state.settings.dust ? getGlowPreset(state.settings.glowMode).dustOpacity : 0;
+  if(key === 'dust' && dustMaterial) dustMaterial.opacity = state.settings.dust ? .22 : 0;
   if(key === 'trails') registry.forEach(item => { if(item.trail) item.trail.visible = state.settings.trails; });
   showToast(`${key}: ${state.settings[key] ? 'включено' : 'выключено'}`);
 }
@@ -867,61 +872,27 @@ function toggleScaleMode(){
   updateScaleMode();
   showToast(state.settings.scale === 'science' ? 'Более строгие расстояния и размеры' : 'Кинематографичный читаемый масштаб');
 }
-function getModePreset(mode){
-  const map = {
-    overview:{bloom:1, exposure:1.05, ambient:.42, fill:.22, sun:4.2},
-    cinema:{bloom:1.75, exposure:1.22, ambient:.25, fill:.16, sun:4.7},
-    science:{bloom:.55, exposure:.94, ambient:.55, fill:.36, sun:3.9},
-    night:{bloom:1.25, exposure:.78, ambient:.08, fill:.08, sun:3.8}
-  };
-  return map[mode] || map.overview;
-}
-function getGlowPreset(glowMode){
-  const map = {
-    real:{label:'Реальный', bloomMul:.92, exposureAdd:-.02, ambientMul:.92, fillMul:.88, sunMul:.96, inspection:0, dustOpacity:.22},
-    inspection:{label:'Для осмотра', bloomMul:.66, exposureAdd:.10, ambientMul:1.7, fillMul:2.0, sunMul:.78, inspection:1.05, dustOpacity:.12}
-  };
-  return map[glowMode] || map.real;
-}
-function syncVisualPreset(announceMode=false, announceGlow=false){
-  const base = getModePreset(state.settings.mode);
-  const glow = getGlowPreset(state.settings.glowMode);
-  const bloom = clamp(base.bloom * glow.bloomMul, 0, 2.6);
-  const exposure = clamp(base.exposure + glow.exposureAdd, 0.55, 1.8);
-  const ambient = base.ambient * glow.ambientMul;
-  const fill = base.fill * glow.fillMul;
-  state.settings.bloom = bloom;
-  state.settings.exposure = exposure;
-  $('#bloomSlider').value = bloom;
-  $('#exposureSlider').value = exposure;
-  $('#bloomValue').textContent = bloom.toFixed(2);
-  $('#exposureValue').textContent = exposure.toFixed(2);
-  if(bloomPass) bloomPass.strength = bloom;
-  if(renderer) renderer.toneMappingExposure = exposure;
-  if(ambientLight) ambientLight.intensity = ambient;
-  if(fillLight) fillLight.intensity = fill;
-  if(sunLight) sunLight.intensity = base.sun * glow.sunMul;
-  if(inspectionLight) inspectionLight.intensity = glow.inspection;
-  if(dustMaterial) dustMaterial.opacity = state.settings.dust ? glow.dustOpacity : 0;
-  if(sunGroup?.userData?.glowSprites){
-    const [core, mid, outer] = sunGroup.userData.glowSprites;
-    core.material.opacity = state.settings.glowMode === 'inspection' ? .38 : .54;
-    mid.material.opacity = state.settings.glowMode === 'inspection' ? .12 : .18;
-    outer.material.opacity = state.settings.glowMode === 'inspection' ? .03 : .06;
-  }
-  $('#glowRealBtn')?.classList.toggle('active', state.settings.glowMode === 'real');
-  $('#glowInspectBtn')?.classList.toggle('active', state.settings.glowMode === 'inspection');
-  if(announceMode) showToast(`Режим: ${$('.mode-btn.active b')?.textContent || state.settings.mode}`);
-  if(announceGlow) showToast(`Свечение: ${glow.label}`);
-}
 function applyMode(mode){
   state.settings.mode = mode;
   $$('.mode-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.mode === mode));
-  syncVisualPreset(true, false);
-}
-function applyGlowMode(glowMode){
-  state.settings.glowMode = glowMode;
-  syncVisualPreset(false, true);
+  const map = {
+    overview:{bloom:1, exposure:1.05, ambient:.42, fill:.22},
+    cinema:{bloom:1.75, exposure:1.22, ambient:.25, fill:.16},
+    science:{bloom:.55, exposure:.94, ambient:.55, fill:.36},
+    night:{bloom:1.25, exposure:.78, ambient:.08, fill:.08}
+  };
+  const m = map[mode] || map.overview;
+  state.settings.bloom = m.bloom;
+  state.settings.exposure = m.exposure;
+  $('#bloomSlider').value = m.bloom;
+  $('#exposureSlider').value = m.exposure;
+  $('#bloomValue').textContent = m.bloom.toFixed(2);
+  $('#exposureValue').textContent = m.exposure.toFixed(2);
+  if(bloomPass) bloomPass.strength = m.bloom;
+  if(renderer) renderer.toneMappingExposure = m.exposure;
+  if(ambientLight) ambientLight.intensity = m.ambient;
+  if(fillLight) fillLight.intensity = m.fill;
+  showToast(`Режим: ${$('.mode-btn.active b')?.textContent || mode}`);
 }
 function toggleFullscreen(){
   const root = document.documentElement;
@@ -956,7 +927,7 @@ function initThree(){
   return new Promise(resolve => {
     const canvas = $('#solarCanvas');
     scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x000000, 0.00016);
+    scene.fog = new THREE.FogExp2(0x02030b, 0.00022);
     camera = new THREE.PerspectiveCamera(48, innerWidth / innerHeight, .08, 9000);
     camera.position.set(0, 148, 360);
     clock = new THREE.Clock();
@@ -994,13 +965,10 @@ function initThree(){
       $('#followBtn').classList.remove('active');
     });
 
-    ambientLight = new THREE.AmbientLight(0xf6f6ff, .42);
-    fillLight = new THREE.HemisphereLight(0xc8d8ff, 0x020202, .22);
-    sunLight = new THREE.PointLight(0xffe4ad, 4.2, 0, 1.15);
-    inspectionLight = new THREE.DirectionalLight(0xf4f7ff, 0);
-    inspectionLight.position.set(120, 90, 160);
-    inspectionLight.target.position.set(0,0,0);
-    scene.add(ambientLight, fillLight, sunLight, inspectionLight, inspectionLight.target);
+    ambientLight = new THREE.AmbientLight(0x89a8ff, .42);
+    fillLight = new THREE.HemisphereLight(0x8faaff, 0x150b0a, .22);
+    sunLight = new THREE.PointLight(0xffe1a7, 4.2, 0, 1.15);
+    scene.add(ambientLight, fillLight, sunLight);
 
     setLoader(66, 'Создание окружения…');
     buildEnvironment();
@@ -1011,7 +979,6 @@ function initThree(){
     setLoader(88, 'Создание кометы и поясов…');
     buildComet(getObject('halley'));
     buildAsteroidBelts();
-    syncVisualPreset(false, false);
     setLoader(94, 'Подключение управления…');
     bindCanvasInput();
     addEventListener('resize', resizeRenderer);
@@ -1039,14 +1006,14 @@ function buildEnvironment(){
         vec3 p=normalize(vPos);
         float n=noise(p*4.5 + vec3(uTime*.01,0.0,0.0));
         float n2=noise(p*9.0 - vec3(0.0,uTime*.006,0.0));
-        float neb=smoothstep(.58,.96,n*.68+n2*.24);
-        vec3 c1=vec3(.0,.0,.0);
-        vec3 c2=vec3(.006,.009,.018);
-        vec3 c3=vec3(.025,.015,.04);
-        vec3 color=mix(c1,c2,neb*.55);
-        color=mix(color,c3,smoothstep(.82,1.0,n2)*.16);
-        float vignette=pow(1.0-abs(p.y)*.78,1.5);
-        color *= (.85 + vignette*.15);
+        float neb=smoothstep(.48,.95,n*.75+n2*.35);
+        vec3 c1=vec3(.01,.018,.05);
+        vec3 c2=vec3(.05,.13,.26);
+        vec3 c3=vec3(.23,.11,.35);
+        vec3 color=mix(c1,c2,neb*.72);
+        color=mix(color,c3,smoothstep(.72,1.0,n2)*.28);
+        float horizon=pow(abs(p.y),.35);
+        color += vec3(.02,.035,.07)*(1.0-horizon);
         gl_FragColor=vec4(color,1.0);
       }`
   });
@@ -1065,7 +1032,7 @@ function buildEnvironment(){
     positions[i*3] = radius * Math.sin(phi) * Math.cos(theta);
     positions[i*3+1] = radius * Math.cos(phi);
     positions[i*3+2] = radius * Math.sin(phi) * Math.sin(theta);
-    const color = new THREE.Color().setHSL(.58 + Math.random()*.06, .10 + Math.random()*.18, .76 + Math.random()*.22);
+    const color = new THREE.Color().setHSL(.56 + Math.random()*.16, .35 + Math.random()*.35, .74 + Math.random()*.25);
     colors[i*3] = color.r; colors[i*3+1] = color.g; colors[i*3+2] = color.b;
     phases[i] = Math.random() * Math.PI * 2;
   }
@@ -1096,13 +1063,114 @@ function buildEnvironment(){
   scene.add(new THREE.Points(dustGeo,dustMaterial));
 }
 
+
+function createAnimatedSunMaterial(baseTexture){
+  return new THREE.ShaderMaterial({
+    uniforms:{
+      uMap:{value:baseTexture},
+      uTime:{value:0},
+      uWarm:{value:new THREE.Color(1.0,.71,.25)},
+      uHot:{value:new THREE.Color(1.0,.97,.72)},
+      uDark:{value:new THREE.Color(.62,.13,.015)}
+    },
+    transparent:false,
+    depthWrite:true,
+    toneMapped:false,
+    vertexShader:`
+      varying vec2 vUv;
+      varying vec3 vNormal;
+      varying vec3 vView;
+      void main(){
+        vUv = uv;
+        vec4 mv = modelViewMatrix * vec4(position,1.0);
+        vNormal = normalize(normalMatrix * normal);
+        vView = normalize(-mv.xyz);
+        gl_Position = projectionMatrix * mv;
+      }
+    `,
+    fragmentShader:`
+      uniform sampler2D uMap;
+      uniform float uTime;
+      uniform vec3 uWarm;
+      uniform vec3 uHot;
+      uniform vec3 uDark;
+      varying vec2 vUv;
+      varying vec3 vNormal;
+      varying vec3 vView;
+      float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7))) * 43758.5453123); }
+      float noise(vec2 p){
+        vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
+        return mix(mix(hash(i),hash(i+vec2(1.0,0.0)),f.x),mix(hash(i+vec2(0.0,1.0)),hash(i+vec2(1.0,1.0)),f.x),f.y);
+      }
+      float fbm(vec2 p){
+        float v=0.0; float a=.5;
+        for(int i=0;i<5;i++){ v += a*noise(p); p = p*2.05 + 13.7; a *= .48; }
+        return v;
+      }
+      void main(){
+        vec2 uv = vUv;
+        float band = sin((uv.y + uTime*.018) * 62.0 + sin(uv.x*19.0-uTime*.35)*1.6);
+        float flowA = fbm(uv*9.0 + vec2(uTime*.055, -uTime*.018));
+        float flowB = fbm(vec2(uv.x*18.0-uTime*.04, uv.y*12.0+uTime*.026));
+        vec2 warped = uv + vec2((flowA-.5)*.032 + sin(uv.y*34.0+uTime*.55)*.006, (flowB-.5)*.018);
+        vec3 tex = texture2D(uMap, fract(warped)).rgb;
+        float cells = fbm(uv*42.0 + vec2(uTime*.13, -uTime*.09));
+        float granules = smoothstep(.24,.82,cells) * .42;
+        float filaments = smoothstep(.62,.98,flowB + band*.08);
+        float spots = smoothstep(.78,.98,fbm(uv*15.0 + vec2(-uTime*.018,uTime*.012)));
+        vec3 base = mix(uWarm, uHot, clamp(tex.r*.45 + granules*.95 + filaments*.25,0.0,1.0));
+        base = mix(base, uDark, spots*.34);
+        float limb = clamp(dot(normalize(vNormal), normalize(vView)), 0.0, 1.0);
+        float limbGlow = pow(1.0-limb, 2.2);
+        base *= (.86 + limb*.46);
+        base += vec3(1.0,.55,.12) * limbGlow * .55;
+        base += vec3(1.0,.86,.42) * granules * .22;
+        gl_FragColor = vec4(base,1.0);
+      }
+    `
+  });
+}
+function createSunChromosphereMaterial(){
+  return new THREE.ShaderMaterial({
+    uniforms:{uTime:{value:0}},
+    transparent:true,
+    side:THREE.BackSide,
+    depthWrite:false,
+    blending:THREE.AdditiveBlending,
+    toneMapped:false,
+    vertexShader:`varying vec3 vNormal; varying vec3 vView; void main(){ vec4 mv=modelViewMatrix*vec4(position,1.0); vNormal=normalize(normalMatrix*normal); vView=normalize(-mv.xyz); gl_Position=projectionMatrix*mv; }`,
+    fragmentShader:`uniform float uTime; varying vec3 vNormal; varying vec3 vView; void main(){ float fres=pow(max(0.0,1.0-dot(vNormal,vView)),1.55); float pulse=.72+.28*sin(uTime*1.15 + vNormal.y*9.0); vec3 color=vec3(1.0,.38,.08); gl_FragColor=vec4(color,fres*.46*pulse); }`
+  });
+}
+function createSolarProminence(angle, radius, height, spin=0.08){
+  const points = [];
+  for(let i=0;i<=22;i++){
+    const t=i/22;
+    const a=angle + (t-.5)*.22;
+    const r=radius + Math.sin(t*Math.PI)*height;
+    points.push(new THREE.Vector3(Math.cos(a)*r, Math.sin((t-.5)*Math.PI)*height*.34, Math.sin(a)*r));
+  }
+  const curve = new THREE.CatmullRomCurve3(points);
+  const geo = new THREE.TubeGeometry(curve, 42, .42, 8, false);
+  const mat = new THREE.MeshBasicMaterial({color:0xff7a2e,transparent:true,opacity:.38,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false});
+  const mesh = new THREE.Mesh(geo,mat);
+  mesh.userData.prominenceSpin = spin;
+  return mesh;
+}
+
 function buildSun(){
   const data = getObject('sun');
   sunGroup = new THREE.Group();
   const sunTexture = getTexture('sun') || makeNoiseTexture(['#fff1b5','#ffb347','#ff5a23','#8a1a00'],512,true);
-  const sunMaterial = new THREE.MeshBasicMaterial({map:sunTexture,color:0xffffff,toneMapped:false});
-  const sun = new THREE.Mesh(new THREE.SphereGeometry(data.radius,96,96), sunMaterial);
+  const sunMaterial = createAnimatedSunMaterial(sunTexture);
+  const sun = new THREE.Mesh(new THREE.SphereGeometry(data.radius,128,128), sunMaterial);
   sunGroup.add(sun);
+  const chromosphere = new THREE.Mesh(new THREE.SphereGeometry(data.radius*1.018,128,128), createSunChromosphereMaterial());
+  chromosphere.userData.isSunAtmosphere = true;
+  sunGroup.add(chromosphere);
+  [0.4,2.2,4.7].forEach((angle,idx)=> sunGroup.add(createSolarProminence(angle,data.radius*1.04,[9,6,7][idx],[.06,-.045,.038][idx])));
+  sunGroup.userData.sunMaterial = sunMaterial;
+  sunGroup.userData.chromosphereMaterial = chromosphere.material;
 
   const glowTexture = createGlowTexture('rgba(255,248,214,1)','rgba(255,171,61,0)','rgba(255,207,105,.18)');
   const glowSprites = [];
@@ -1131,10 +1199,17 @@ function registerObject(id, item){
   if(item.data && item.data.id && item.data.id !== 'sun') createLabel(item.data);
   if(item.data?.id === 'sun') createLabel(item.data);
 }
+function getLabelMeta(data){
+  if(data.id === 'sun') return 'G2V · центр системы';
+  if(data.comet) return 'комета · вытянутая орбита';
+  const au = data.orbit ? (data.orbit / 112).toFixed(data.orbit < 120 ? 2 : 1) : '0';
+  return `${data.type} · ${au} AU`;
+}
 function createLabel(data){
   const div = document.createElement('div');
   div.className = 'space-label';
-  div.innerHTML = `<span class="icon">${planetIconInline(data.id, 16)}</span><span>${data.name}</span>`;
+  div.style.setProperty('--accent', colorToCss(data.color));
+  div.innerHTML = `<span class="icon">${planetIconInline(data.id, 20)}</span><span class="copy"><span class="name">${data.name}</span><span class="meta">${getLabelMeta(data)}</span></span><span class="rail"></span>`;
   $('#labelLayer').appendChild(div);
   labels.set(data.id, div);
 }
@@ -1466,15 +1541,18 @@ function animate(){
 
   if(deepSpaceSphere) deepSpaceSphere.material.uniforms.uTime.value = elapsed;
   if(starsMaterial){ starsMaterial.uniforms.uTime.value = elapsed; starsMaterial.uniforms.uPixelRatio.value = qualityPixelRatio(); }
-  if(inspectionLight){
-    inspectionLight.position.copy(camera.position).add(new THREE.Vector3(18, 12, 10));
-    inspectionLight.target.position.copy(controls.target);
-    inspectionLight.target.updateMatrixWorld();
-  }
   if(dustMaterial) dustMaterial.size = 1.3 + Math.sin(elapsed*.35)*.18;
   if(sunGroup){
-    sunGroup.children[0].rotation.y += delta * .035 * Math.sign(timeScale || 1);
+    sunGroup.children[0].rotation.y += delta * .028 * Math.sign(timeScale || 1);
     sunGroup.rotation.y += delta * .004;
+    if(sunGroup.userData.sunMaterial) sunGroup.userData.sunMaterial.uniforms.uTime.value = elapsed;
+    if(sunGroup.userData.chromosphereMaterial) sunGroup.userData.chromosphereMaterial.uniforms.uTime.value = elapsed;
+    sunGroup.children.forEach(child => {
+      if(child.userData.prominenceSpin){
+        child.rotation.y += child.userData.prominenceSpin * delta;
+        child.material.opacity = .30 + Math.sin(elapsed*1.4 + child.userData.prominenceSpin*18.0)*.08;
+      }
+    });
   }
   if(asteroidBelt) asteroidBelt.rotation.y += delta * .018 * timeScale;
   if(kuiperBelt) kuiperBelt.rotation.y -= delta * .006 * timeScale;
@@ -1568,19 +1646,27 @@ function updateLabels(){
     if(!label) return;
     item.group.getWorldPosition(reusable.v1);
     reusable.v2.copy(reusable.v1).project(camera);
-    const visible = reusable.v2.z < 1 && reusable.v2.x > -1.15 && reusable.v2.x < 1.15 && reusable.v2.y > -1.15 && reusable.v2.y < 1.15;
+    const visible = reusable.v2.z < 1 && reusable.v2.x > -1.12 && reusable.v2.x < 1.12 && reusable.v2.y > -1.12 && reusable.v2.y < 1.12;
     const distance = camera.position.distanceTo(reusable.v1);
-    const nearLimit = id === 'sun' ? 20 : 7;
+    const nearLimit = id === 'sun' ? 24 : 7;
     if(!visible || distance < nearLimit){
       label.style.opacity = 0;
       return;
     }
+    const screenOffset = id === 'sun' ? 42 : clamp((item.radius || 3) * 3.8, 18, 52);
     const x = (reusable.v2.x * .5 + .5) * width;
-    const y = (-reusable.v2.y * .5 + .5) * height;
+    const y = (-reusable.v2.y * .5 + .5) * height - screenOffset;
+    const baseScale = clamp(1.08 - distance / 1450, .72, 1.06);
+    const depthScale = id === state.focusedId ? clamp(baseScale + .14, .86, 1.18) : baseScale;
     label.style.left = `${x}px`;
     label.style.top = `${y}px`;
-    label.style.opacity = clamp(1 - distance / 1200, .28, .96);
+    label.style.opacity = clamp(1 - distance / 1350, .22, .97);
+    label.style.setProperty('--depth-scale', depthScale.toFixed(2));
+    label.style.setProperty('--label-y', id === state.focusedId ? '-34px' : '-24px');
     label.classList.toggle('focused', id === state.focusedId);
+    label.classList.toggle('distant', distance > 760);
+    label.classList.toggle('near', distance < 240 && id !== 'sun');
+    label.style.zIndex = String(Math.round(10000 - distance));
   });
 }
 function drawRadar(){
