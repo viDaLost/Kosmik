@@ -1404,6 +1404,16 @@ float fbm3(vec3 p){ float v = 0.0, a = 0.5; for(int i = 0; i < 3; i++){ v += a *
 float fbm5(vec3 p){ float v = 0.0, a = 0.5; for(int i = 0; i < 5; i++){ v += a * vnoise(p); p = p * 2.03 + vec3(1.7,9.2,3.1); a *= 0.5; } return v / 0.96875; }
 `;
 const GLSL_OUT = `
+#if __VERSION__ >= 300
+{
+  uvec4 kExp = floatBitsToUint(gl_FragColor) & uvec4(0x7f800000u);
+  gl_FragColor = vec4(
+    kExp.x == 0x7f800000u ? 0.0 : min(gl_FragColor.x, 64.0),
+    kExp.y == 0x7f800000u ? 0.0 : min(gl_FragColor.y, 64.0),
+    kExp.z == 0x7f800000u ? 0.0 : min(gl_FragColor.z, 64.0),
+    kExp.w == 0x7f800000u ? 0.0 : gl_FragColor.w);
+}
+#endif
 #include <tonemapping_fragment>
 #include <colorspace_fragment>
 `;
@@ -1554,7 +1564,7 @@ function bodyMaterial(b, opts = {}){
         vec3 col = alb * (uSun * diff * shadow + uAmb) + alb * uFill * (0.25 + 0.75 * max(dot(N, V), 0.0));
         if(uHasSpec > 0.5){
           float rough = texture2D(uRough, vUv).g;
-          vec3 H = normalize(L + V);
+          vec3 H = normalize(L + V + vec3(1e-5));
           float sp = pow(max(dot(N, H), 0.0), 110.0) * (1.0 - rough) * smoothstep(0.0, 0.1, ndl);
           col += vec3(1.0, 0.84, 0.62) * sp * 0.42 * uSun;
         }
@@ -1599,7 +1609,7 @@ function atmosphereShells(color, strength, k = 1.05){
       varying vec3 vN; varying vec3 vW;
       void main(){
         vec3 N = normalize(vN); vec3 V = normalize(cameraPosition - vW); vec3 L = normalize(-vW);
-        float f = pow(1.0 - max(dot(N, V), 0.0), 3.0);
+        float f = pow(clamp(1.0 - dot(N, V), 0.0, 1.0), 3.0);
         float day = smoothstep(-0.25, 0.45, dot(N, L));
         gl_FragColor = vec4(uColor * f * day * uStrength * 0.9, 1.0);
         ${GLSL_OUT}
@@ -1636,7 +1646,7 @@ function buildSun(){
         vec3 gp = p * 38.0 + warp * 3.0 + vec3(0.0, t * 4.0, t * 2.0);
         float n1 = vnoise(gp);
         float n2 = vnoise(gp * 2.1 + 7.3);
-        float lanes = pow(1.0 - abs(n1 * 2.0 - 1.0), 5.0);
+        float lanes = pow(clamp(1.0 - abs(n1 * 2.0 - 1.0), 0.0, 1.0), 5.0);
         float cells = 0.55 + 0.45 * n2;
         float gran = clamp(cells * (1.0 - lanes * 0.8), 0.0, 1.0);
         float sg = fbm3(p * 7.0 + t * 0.5);
@@ -1654,7 +1664,7 @@ function buildSun(){
         vec3 hot = vec3(2.0, 1.0, 0.24);
         vec3 col = mix(lane, warm, smoothstep(0.2, 0.6, gran));
         col = mix(col, hot, smoothstep(0.6, 1.0, gran));
-        float fac = smoothstep(0.58, 0.8, fbm3(p * 8.0 + 11.0 + t)) * pow(1.0 - mu, 1.5);
+        float fac = smoothstep(0.58, 0.8, fbm3(p * 8.0 + 11.0 + t)) * pow(clamp(1.0 - mu, 0.0, 1.0), 1.5);
         col += vec3(0.9, 0.5, 0.15) * fac;
         col = mix(col, col * vec3(0.5, 0.32, 0.22), pen * 0.75);
         col = mix(col, vec3(0.16, 0.05, 0.012), umbra * 0.9);
@@ -1997,7 +2007,7 @@ function tailMaterial(color, streak){
       uniform vec3 uColor; uniform float uAct; uniform float uTime; uniform float uStreak;
       varying vec2 vST;
       void main(){
-        float s = vST.x; float x = vST.y;
+        float s = clamp(vST.x, 0.0, 1.0); float x = clamp(vST.y, -1.0, 1.0);
         float fall = pow(1.0 - s, 1.7);
         float across = exp(-x * x * 3.2) * (1.0 - smoothstep(0.8, 1.0, abs(x)));
         float streaks = 0.55 + 0.45 * vnoise(vec3(x * uStreak, s * 5.0 - uTime * 0.35, 1.7));
@@ -2033,8 +2043,8 @@ function buildComet(){
   const cm = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), coma); cm.frustumCulled = false; cm.renderOrder = 7; root.add(cm);
   const tg = new THREE.PlaneGeometry(1, 2, 64, 1);
   const ion = tailMaterial([0.16, 0.36, 0.85], 9.0), dust = tailMaterial([0.62, 0.48, 0.28], 4.0);
-  [ion, dust].forEach(m => { const t = new THREE.Mesh(tg, m); t.frustumCulled = false; t.renderOrder = 7; E.scene.add(t); });
-  const body = {id:'halley', data:b, kind:'comet', root, size, mesh, worldPos:new THREE.Vector3(), radius:b.r, au:{x:0,y:0,z:0}, coma, ion, dust};
+  const tails = [ion, dust].map(m => { const t = new THREE.Mesh(tg, m); t.frustumCulled = false; t.renderOrder = 7; E.scene.add(t); return t; });
+  const body = {id:'halley', data:b, kind:'comet', root, size, mesh, worldPos:new THREE.Vector3(), radius:b.r, au:{x:0,y:0,z:0}, coma, ion, dust, tails};
   E.bodies.set('halley', body);
   buildOrbit(body);
 }
@@ -2060,8 +2070,7 @@ function ringMaterial(tex, dark){
         if(uDark > 0.5){ alb = vec3(dot(alb, vec3(0.33))) * 0.22; alpha *= 0.45; }
         vec3 col = alb * (uSun * sh * lit * slope + uAmb);
         gl_FragColor = vec4(col, alpha * 0.96);
-        #include <tonemapping_fragment>
-        #include <colorspace_fragment>
+        ${GLSL_OUT}
       }`,
     transparent:true, depthWrite:false, side:THREE.DoubleSide
   });
@@ -2222,6 +2231,23 @@ function buildComposer(){
   const comp = new EffectComposer(E.renderer, rt);
   comp.addPass(new RenderPass(E.scene, E.camera));
   E.bloom = new UnrealBloomPass(new THREE.Vector2(w, h), 0.8, 0.5, 0.85);
+  const hp = E.bloom.materialHighPassFilter;
+  if(hp && E.renderer.capabilities.isWebGL2){
+    hp.fragmentShader = `
+      uniform sampler2D tDiffuse; uniform vec3 defaultColor; uniform float defaultOpacity;
+      uniform float luminosityThreshold; uniform float smoothWidth;
+      varying vec2 vUv;
+      void main(){
+        vec4 texel = texture2D(tDiffuse, vUv);
+        uvec4 e = floatBitsToUint(texel) & uvec4(0x7f800000u);
+        if(e.x == 0x7f800000u || e.y == 0x7f800000u || e.z == 0x7f800000u) texel = vec4(0.0);
+        texel.rgb = min(texel.rgb, vec3(40.0));
+        float v = dot(texel.rgb, vec3(0.299, 0.587, 0.114));
+        float alpha = smoothstep(luminosityThreshold, luminosityThreshold + smoothWidth, v);
+        gl_FragColor = mix(vec4(defaultColor, defaultOpacity), texel, alpha);
+      }`;
+    hp.needsUpdate = true;
+  }
   comp.addPass(E.bloom);
   comp.addPass(new OutputPass());
   comp.setPixelRatio(E.pr);
@@ -2366,6 +2392,7 @@ function updateAll(dt){
   const lenK = 1 + E.scaleMix * 1.2;
   c.coma.uniforms.uSize.value = 3 + 14 * act;
   c.coma.uniforms.uAct.value = act;
+  c.tails.forEach(t => { t.visible = act > 0.002; });
   for(const [mat, L, w0, w1, bend, lag] of [[c.ion.material ?? c.ion, 18 + 80 * act, 0.5, 1.2 + 3 * act, 0, 0], [c.dust.material ?? c.dust, 14 + 55 * act, 0.8, 2 + 10 * act, 0.28, 0.35]]){
     const u = mat.uniforms;
     u.uStart.value.copy(c.worldPos);
